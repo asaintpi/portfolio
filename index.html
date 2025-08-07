@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arnaud Saint-Pierre | Systems & Innovation Architect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        background-color: #000;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #000000;
+        color: #e2e8f0;
+        scroll-behavior: smooth;
+      }
+      #constellation-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
+      .main-content {
+        position: relative;
+        z-index: 1;
+      }
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        position: relative;
+      }
+      .bento-item {
+        background-color: rgba(17, 17, 17, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid #222222;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        position: relative;
+        overflow: hidden;
+        z-index: 10;
+      }
+      .bento-item:hover {
+        transform: translateY(-4px);
+        border-color: #4f46e5;
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
+      }
+      .bg-image-container {
+        background-size: cover;
+        background-position: center;
+      }
+      .bg-image-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          to top,
+          rgba(17, 17, 17, 1),
+          rgba(17, 17, 17, 0.5)
+        );
+        z-index: 1;
+      }
+      .bg-image-container > * {
+        position: relative;
+        z-index: 2;
+      }
+      .text-gradient {
+        background: linear-gradient(to right, #6366f1, #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .col-span-1 {
+        grid-column: span 1 / span 1;
+      }
+      .col-span-2 {
+        grid-column: span 2 / span 2;
+      }
+      .col-span-3 {
+        grid-column: span 3 / span 3;
+      }
+      .col-span-4 {
+        grid-column: span 4 / span 4;
+      }
+      .row-span-2 {
+        grid-row: span 2 / span 2;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        z-index: 50;
+      }
+      .modal-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+      .modal-content {
+        background-color: #111111;
+        border: 1px solid #333;
+        border-radius: 1rem;
+        padding: 2.5rem;
+        max-width: 600px;
+        width: 90%;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+        position: relative;
+      }
+      .modal-overlay.visible .modal-content {
+        transform: scale(1);
+      }
+
+      .expand-content,
+      .summary-content {
+        transition: opacity 0.3s ease-in-out;
+      }
+      .expand-content {
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+      }
+      .bento-item.expanded {
+        grid-column: span 4 / span 4;
+        grid-row: span 3 / span 3;
+        overflow-y: auto;
+      }
+      .bento-item.expanded .summary-content {
+        opacity: 0;
+        height: 0;
+        pointer-events: none;
+      }
+      .bento-item.expanded .expand-content {
+        opacity: 1;
+        height: auto;
+      }
+      .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 99px;
+        color: white;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 20;
+      }
+      .dish-image {
+        filter: grayscale(100%);
+        transition: filter 0.3s ease;
+      }
+      .dish-item:hover .dish-image {
+        filter: grayscale(0%);
+      }
+
+      @keyframes loadIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-load-in {
+        opacity: 0;
+        animation: loadIn 0.5s ease-out forwards;
+      }
+
+      @media (max-width: 768px) {
+        .bento-grid {
+          grid-template-columns: repeat(1, 1fr);
+        }
+        .col-span-1,
+        .col-span-2,
+        .col-span-3,
+        .col-span-4,
+        .row-span-2 {
+          grid-column: span 1 / span 1;
+          grid-row: auto;
+        }
+        .bento-item.expanded {
+          grid-column: span 1 / span 1;
+          grid-row: auto;
+          height: 450px;
+        }
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <canvas id="constellation-canvas"></canvas>
+
+    <div
+      class="main-content max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24"
+    >
+      <header class="mb-16 text-center">
+        <h1
+          class="text-4xl md:text-6xl font-extrabold tracking-tighter !leading-tight mb-4"
+        >
+          Arnaud Saint-Pierre
+        </h1>
+        <p class="max-w-2xl mx-auto text-lg md:text-xl text-slate-400">
+          Aspiring Software Engineer & Innovation Architect
+        </p>
+      </header>
+
+      <div class="bento-grid">
+        <div
+          id="open-playbook-modal"
+          class="bento-item col-span-4 md:col-span-2 row-span-2 flex flex-col justify-center animate-load-in cursor-pointer"
+          style="animation-delay: 0.1s"
+        >
+          <h2
+            class="text-2xl md:text-3xl font-bold text-slate-100 !leading-tight"
+          >
+            I build the teams and tech that solve the right problems in the
+            <span class="text-gradient">right way.</span>
+          </h2>
+          <p class="text-slate-400 mt-4">
+            My approach combines first-principles thinking with
+            cross-disciplinary leadership to turn ambitious ideas into
+            market-defining products.
+          </p>
+        </div>
+
+        <a
+          href="https://github.com/asaintpi"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="bento-item col-span-2 md:col-span-1 row-span-2 flex flex-col text-center justify-center items-center animate-load-in"
+          style="animation-delay: 0.2s"
+        >
+          <h3 class="text-2xl font-semibold text-slate-100 mb-4">GitHub</h3>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            fill="currentColor"
+            class="bi bi-github text-slate-500"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"
+            />
+          </svg>
+        </a>
+
+        <a
+          href="https://linkedin.com/in/arnaudsaintpierre"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="bento-item col-span-2 md:col-span-1 row-span-2 flex flex-col text-center justify-center items-center animate-load-in"
+          style="animation-delay: 0.3s"
+        >
+          <h3 class="text-2xl font-semibold text-slate-100 mb-4">LinkedIn</h3>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="60"
+            height="60"
+            fill="currentColor"
+            class="bi bi-linkedin text-slate-500"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854zm4.943 12.248V6.169H2.542v7.225zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248S2.4 3.226 2.4 3.934c0 .694.521 1.248 1.327 1.248zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016l.016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225z"
+            />
+          </svg>
+        </a>
+
+        <div
+          id="open-nvidia-modal"
+          class="bento-item col-span-4 md:col-span-2 cursor-pointer flex flex-col justify-between animate-load-in"
+          style="animation-delay: 0.4s"
+        >
+          <div>
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              Experience at NVIDIA
+            </h3>
+            <p class="text-slate-400 text-sm">
+              Architecting beyond the code to solve core performance bottlenecks
+              in graphics drivers.
+            </p>
+          </div>
+          <img
+            src="img/nvidia-logo.png"
+            alt="NVIDIA Logo"
+            class="h-8 w-auto self-end mt-4"
+          />
+        </div>
+
+        <div
+          id="open-microsoft-modal"
+          class="bento-item col-span-4 md:col-span-2 cursor-pointer flex flex-col justify-between animate-load-in"
+          style="animation-delay: 0.5s"
+        >
+          <h3 class="text-lg font-semibold text-slate-100 mb-2">
+            Experience at Microsoft
+          </h3>
+          <p class="text-slate-400 text-sm">
+            Building trust from first principles with a FIPS-compliant
+            cryptographic library in Rust.
+          </p>
+          <img
+            src="img/microsoft-logo.png"
+            alt="Microsoft Logo"
+            class="h-7 w-auto self-end mt-4"
+          />
+        </div>
+
+        <div
+          id="first-principles-block"
+          class="bento-item col-span-4 md:col-span-2 animate-load-in cursor-pointer"
+          style="animation-delay: 0.6s"
+        >
+          <div class="summary-content">
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              First Principles
+            </h3>
+            <p class="text-slate-400 text-sm">
+              My approach to innovation, from a high school soda business to
+              optimizing GPU drivers. Click to read the story.
+            </p>
+          </div>
+          <div class="expand-content">
+            <button class="close-btn">X</button>
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              Identify. Deconstruct. Build.
+            </h3>
+            <p class="text-slate-400 text-sm">
+              In high school, I saw two problems: I had no money, and our campus
+              banned soda.
+              <br /><br />
+              Instead of just breaking the rules, I broke down the problem. What
+              *is* soda? Carbonated water, sugar, and flavor. I could source all
+              of those. So I dove into the science, experimenting with sugar
+              inversion ratios for mouthfeel and osmotic maceration to extract
+              flavors from raw mint, ginger, and roots. I wasn't just making
+              soda; I was engineering a flavor system from scratch.
+              <br /><br />
+              The result was a product so good, the administration gave me a
+              permit to sell it—on one condition: teachers got theirs for free.
+              I learned a key lesson:
+              <strong
+                >when you understand a system from its first principles, you can
+                rewrite the rules.</strong
+              >
+              <br /><br />
+              This mindset is how I approach everything, from a soda business to
+              optimizing a GPU driver cache at NVIDIA. It’s about finding the
+              core truth of a problem and building the most effective solution,
+              whether for flavor or for performance.
+            </p>
+          </div>
+        </div>
+
+        <div
+          id="leadership-block"
+          class="bento-item col-span-4 md:col-span-2 animate-load-in cursor-pointer"
+          style="animation-delay: 0.7s"
+        >
+          <div class="summary-content">
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              Cross-Disciplinary Leadership
+            </h3>
+            <p class="text-slate-400 text-sm">
+              I build teams of diverse thinkers to find solutions that
+              mono-culture teams can't conceive. Click here.
+            </p>
+          </div>
+          <div class="expand-content">
+            <button class="close-btn">X</button>
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              Building the Team Before the Product
+            </h3>
+            <p class="text-slate-400 text-sm">
+              In high school, I realized the most valuable skill wasn't just
+              being the smartest person in the room, but finding them. I started
+              curating a network of top performers.
+              <br /><br />
+              I brought this to university and founded the 'Innovation
+              Collective'. I didn't just recruit engineers; I actively sought
+              out the sharpest minds in Psychology, History, and Physics from
+              UCSC, Stanford, and Berkeley. Why? Because an engineer sees a
+              system, but a historian sees its cycles, and a psychologist sees
+              the user. True breakthroughs happen when these views collide.
+              <br /><br />
+              We connected our projects to campus initiatives at Stanford and
+              Berkeley, proving the model works. I don't just lead projects; I
+              architect teams of diverse experts who can solve problems in ways
+              a homogenous team never could.
+            </p>
+          </div>
+        </div>
+
+        <div
+          id="craft-block"
+          class="bento-item col-span-4 md:col-span-2 bg-image-container animate-load-in cursor-pointer"
+          style="animation-delay: 0.9s; background-image: url('img/craft.jpg')"
+        >
+          <div class="summary-content">
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              Mastering a Craft
+            </h3>
+            <p class="text-slate-200 text-sm">
+              From Italian pasta to Japanese ramen, the discipline of mastering
+              a craft—in the kitchen or the kernel—is the same. Click here.
+            </p>
+          </div>
+          <div class="expand-content">
+            <button class="close-btn">X</button>
+            <p class="text-slate-300 text-sm mb-4">
+              For me, a recipe is a technical document written in the language
+              of a culture. A little step out of VS Code and into the real
+              world. I cook to deconstruct and understand. It's my way of
+              inching towards my dream of traveling the world, one dish at a
+              time.
+            </p>
+            <h4 class="text-md font-semibold text-slate-100 mb-3">
+              Current Top 5
+            </h4>
+            <ul class="space-y-3 text-sm">
+              <li class="flex items-center gap-4 dish-item">
+                <img
+                  src="img/dish1.png"
+                  alt="Pici all'Aglione"
+                  class="w-16 h-16 rounded-md object-cover shrink-0 dish-image"
+                />
+                <div>
+                  <h5 class="font-semibold text-slate-200">Pici all'Aglione</h5>
+                  <p class="text-slate-400">
+                    Hand rolling Tuscan noodles and balancing a ten clove garlic
+                    sauce. My personal favorite and a lesson in patience and
+                    elegance.
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-center gap-4 dish-item">
+                <img
+                  src="img/dish2.png"
+                  alt="Shio Ramen"
+                  class="w-16 h-16 rounded-md object-cover shrink-0 dish-image"
+                />
+                <div>
+                  <h5 class="font-semibold text-slate-200">
+                    Shio Ramen w/ Chashu
+                  </h5>
+                  <p class="text-slate-400">
+                    A systems engineering challenge in a bowl; having to master
+                    the 12-hour multi-layered broth and flavor balance of a
+                    simple cozy dish.
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-center gap-4 dish-item">
+                <img
+                  src="img/dish3.png"
+                  alt="Lamb Rogan Josh"
+                  class="w-16 h-16 rounded-md object-cover shrink-0 dish-image"
+                />
+                <div>
+                  <h5 class="font-semibold text-slate-200">Lamb Rogan Josh</h5>
+                  <p class="text-slate-400">
+                    Here I perfected the art of 'bhuno', the slow frying of
+                    spices for a layered Kashmiri curry.
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-center gap-4 dish-item">
+                <img
+                  src="img/dish4.png"
+                  alt="Lomo Saltado"
+                  class="w-16 h-16 rounded-md object-cover shrink-0 dish-image"
+                />
+                <div>
+                  <h5 class="font-semibold text-slate-200">Lomo Saltado</h5>
+                  <p class="text-slate-400">
+                    Captured the 'wok hei' in this Chinese-Peruvian stir fry
+                    where high speed technique turned out to be everything.
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-center gap-4 dish-item">
+                <img
+                  src="img/dish5.png"
+                  alt="Canelés de Bordeaux"
+                  class="w-16 h-16 rounded-md object-cover shrink-0 dish-image"
+                />
+                <div>
+                  <h5 class="font-semibold text-slate-200">
+                    Canelés de Bordeaux
+                  </h5>
+                  <p class="text-slate-400">
+                    Last but not least, an absolute classic. A two day test of
+                    pure precision baking to achieve the signature caramelized
+                    crust and custardy interior.
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- UPDATED Discipline & Drive Block -->
+        <div
+          id="discipline-block"
+          class="bento-item col-span-4 md:col-span-2 bg-image-container animate-load-in cursor-pointer"
+          style="
+            animation-delay: 1s;
+            background-image: url('img/discipline.jpg');
+          "
+        >
+          <div class="summary-content">
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              Discipline & Drive
+            </h3>
+            <p class="text-slate-200 text-sm">
+              The focus built through years of disciplined physical training
+              directly translates to my work: pushing through hard problems when
+              others stop.
+            </p>
+          </div>
+          <div class="expand-content">
+            <button class="close-btn">X</button>
+            <h3 class="text-lg font-semibold text-slate-100 mb-2">
+              My Training Protocol
+            </h3>
+            <p class="text-slate-300 text-sm mb-4">
+              Discipline isn't a mindset; it's a practice. This is the
+              structured protocol I use to build resilience through progressive
+              overload.
+            </p>
+            <div class="grid grid-cols-3 gap-4 text-center text-sm">
+              <div>
+                <h4 class="font-semibold text-slate-200 mb-2">Push</h4>
+                <ul class="text-slate-400 space-y-1">
+                  <li>Bench Press 4x5</li>
+                  <li>Overhead Press 3x8</li>
+                  <li>Incline DB Press 3x10</li>
+                  <li>Tricep Pushdown 3x12</li>
+                  <li>Lateral Raises 4x15</li>
+                </ul>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-200 mb-2">Pull</h4>
+                <ul class="text-slate-400 space-y-1">
+                  <li>Deadlift 1x5</li>
+                  <li>Weighted Pull-ups 4x6</li>
+                  <li>Barbell Row 3x8</li>
+                  <li>Face Pulls 3x15</li>
+                  <li>Bicep Curls 4x10</li>
+                </ul>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-200 mb-2">Legs</h4>
+                <ul class="text-slate-400 space-y-1">
+                  <li>Barbell Squat 4x5</li>
+                  <li>RDLs 3x8</li>
+                  <li>Leg Press 3x10</li>
+                  <li>Leg Curls 3x12</li>
+                  <li>Calf Raises 4x15</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a
+          href="mailto:arnaudsntpierre@gmail.com"
+          class="bento-item col-span-4 flex items-center justify-between animate-load-in"
+          style="animation-delay: 1.1s"
+        >
+          <div>
+            <h3 class="text-lg font-semibold text-slate-100">
+              Let's Build Something New
+            </h3>
+            <p class="text-slate-400 text-sm">
+              I'm always ready for the next big challenge.
+            </p>
+          </div>
+          <span class="text-indigo-400 font-semibold">Get in Touch &rarr;</span>
+        </a>
+      </div>
+
+      <section id="chronology" class="mt-20 md:mt-28">
+        <h2
+          class="text-3xl md:text-4xl font-bold tracking-tight text-center mb-12"
+        >
+          Professional Chronology
+        </h2>
+        <div class="max-w-3xl mx-auto">
+          <h3 class="text-2xl font-bold text-slate-200 mb-8">Experience</h3>
+          <div class="space-y-12">
+            <div class="flex gap-x-6">
+              <div class="w-32 text-right text-slate-400 font-medium shrink-0">
+                Jun 2024 - Sep 2024
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-slate-100">
+                  Software Engineer Intern, Microsoft
+                </h4>
+                <p class="text-slate-400 mt-1">
+                  Engineered a FIPS-compliant Rust crypto library and optimized
+                  C in Windows Cloud Infrastructure, cutting handshake latency
+                  by 10%.
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-x-6">
+              <div class="w-32 text-right text-slate-400 font-medium shrink-0">
+                Jun 2021 - Sep 2021
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-slate-100">
+                  Software Engineer Intern, NVIDIA
+                </h4>
+                <p class="text-slate-400 mt-1">
+                  Revamped Vulkan/OpenGL Linux tests, cutting firmware test time
+                  by 12%. Built a C++/Python FPS profiler to speed up regression
+                  identification by 25%.
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-x-6">
+              <div class="w-32 text-right text-slate-400 font-medium shrink-0">
+                Sep 2024 - Dec 2024
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-slate-100">
+                  Software Engineer Intern, IntualAI
+                </h4>
+                <p class="text-slate-400 mt-1">
+                  Built scalable Stripe payment microservices, lowering checkout
+                  latency by 32%. Optimized Docker CI/CD pipelines, improving
+                  deployment efficiency by 6%.
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-x-6">
+              <div class="w-32 text-right text-slate-400 font-medium shrink-0">
+                Mar 2022 – Jun 2024
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-slate-100">
+                  Project Lead, Tech4Good Lab
+                </h4>
+                <p class="text-slate-400 mt-1">
+                  Led a team delivering data insights for Santa Cruz County.
+                  Gained hands-on experience with Angular, React, and responsive
+                  front-end design.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-2xl font-bold text-slate-200 mt-16 mb-8">
+            Education
+          </h3>
+          <div class="space-y-8">
+            <div class="flex gap-x-6">
+              <div class="w-32 text-right text-slate-400 font-medium shrink-0">
+                Sep 2020 - Dec 2024
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-slate-100">
+                  University of California, Santa Cruz
+                </h4>
+                <p class="text-slate-400 mt-1">
+                  B.S. in Computer Engineering, Minor in Computer Science
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="mt-20 md:mt-28 text-center text-slate-500">
+        <hr class="border-slate-800/50 mb-8" />
+        <p>
+          &copy; 2025 Arnaud Saint-Pierre. Built with a focus on first
+          principles.
+        </p>
+      </footer>
+    </div>
+
+    <!-- Modals HTML Structure -->
+    <div id="nvidia-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2 class="text-2xl font-bold text-gradient mb-4">
+          NVIDIA: Architecting Beyond the Code
+        </h2>
+        <p class="text-slate-300 mb-4">
+          During a routine debug of a Linux graphics driver, I noticed a
+          performance bottleneck that wasn't explained by the code logic.
+          Standard procedure was to patch the driver, but I suspected a deeper
+          issue.
+        </p>
+        <p class="text-slate-300">
+          After getting permission to investigate further, I traced the issue to
+          a major L2 cache inefficiency in how the firmware handled data
+          pipelines. By reframing the problem from "fixing a bug" to "optimizing
+          the architecture," I was able to propose a new data flow that not only
+          fixed the bug but improved overall performance in related tasks. This
+          experience taught me to always question the underlying assumptions of
+          a system.
+        </p>
+        <button class="close-modal-btn mt-6 text-indigo-400 font-semibold">
+          Close &rarr;
+        </button>
+      </div>
+    </div>
+    <div id="microsoft-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2 class="text-2xl font-bold text-gradient mb-4">
+          Microsoft: Building Trust from Scratch
+        </h2>
+        <p class="text-slate-300 mb-4">
+          The task was to integrate a standard cryptographic verification
+          library into Windows Cloud Infrastructure. However, relying on
+          existing black-box solutions didn't sit right with the FIPS compliance
+          requirements and our need for absolute certainty.
+        </p>
+        <p class="text-slate-300">
+          Starting from first principles, I engineered a new, lightweight
+          cryptographic library in Rust. This involved deep dives into X.509
+          Digital Signature standards and the complexities of ASN.1 data
+          parsing. Building it from the ground up ensured not only perfect
+          compliance but also a more performant and auditable component,
+          reducing handshake latency by 10% for millions of transactions.
+        </p>
+        <button class="close-modal-btn mt-6 text-indigo-400 font-semibold">
+          Close &rarr;
+        </button>
+      </div>
+    </div>
+    <div id="playbook-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2 class="text-3xl font-bold text-gradient mb-6">
+          My Innovation Playbook
+        </h2>
+
+        <div class="mb-6">
+          <h3 class="text-xl font-semibold text-slate-100 mb-2">
+            Core Philosophy: Attack the Monkey First
+          </h3>
+          <p class="text-slate-300">
+            If your goal is to teach a monkey to recite Shakespeare on a
+            pedestal, most people start by building the pedestal. I start by
+            training the monkey. In any ambitious project, there is one core
+            challenge that holds all the risk—the 'monkey'. My philosophy is to
+            attack that single, hardest part of the problem first. We de-risk
+            the entire venture by proving the 'impossible' is possible before we
+            write a single line of code for the easy parts.
+          </p>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="text-xl font-semibold text-slate-100 mb-2">
+            The Framework for Groundbreaking Work
+          </h3>
+          <ul class="list-disc list-inside text-slate-300 space-y-1">
+            <li><b>Who</b> is this for? (Defining the human problem)</li>
+            <li><b>Why</b> are we making this? (Defining the core mission)</li>
+            <li>
+              <b>Why</b> hasn't this been done? (Finding the unique advantage)
+            </li>
+            <li>
+              <b>Where</b> is the impact? (Identifying the scale of the
+              opportunity)
+            </li>
+            <li>
+              <b>How</b> does this change the world? (Articulating the vision)
+            </li>
+          </ul>
+          <p class="text-slate-500 text-sm mt-2">
+            For well-defined projects, we play by the rules and execute with
+            discipline. Knowing which approach to use is the key.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="text-xl font-semibold text-slate-100 mb-2">
+            Proof in Practice: The Innovation Collective
+          </h3>
+          <p class="text-slate-300">
+            To put this playbook into practice, I founded and led the
+            'Innovation Collective'—a curated group of the sharpest minds from
+            UCSC, Stanford, and Berkeley across a range of disciplines: History,
+            Physics, Mechanical Engineering, and Computer Science. It was my lab
+            for seeing how brilliant, diverse minds could deconstruct and solve
+            complex problems together. This is how I build the teams that build
+            the future.
+          </p>
+        </div>
+
+        <button class="close-modal-btn mt-8 text-indigo-400 font-semibold">
+          Close &rarr;
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const bentoItems = document.querySelectorAll(".bento-item");
+        const maxRotate = 8;
+        bentoItems.forEach((item) => {
+          item.addEventListener("mousemove", (e) => {
+            if (item.classList.contains("expanded")) return;
+            const rect = item.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const mouseX = e.clientX - centerX;
+            const mouseY = e.clientY - centerY;
+            const rotateX = (mouseY / (rect.height / 2)) * -maxRotate;
+            const rotateY = (mouseX / (rect.width / 2)) * maxRotate;
+            item.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+          });
+          item.addEventListener("mouseleave", () => {
+            item.style.transform =
+              "perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)";
+          });
+        });
+
+        const modalTriggers = {
+          "open-nvidia-modal": document.getElementById("nvidia-modal"),
+          "open-microsoft-modal": document.getElementById("microsoft-modal"),
+          "open-playbook-modal": document.getElementById("playbook-modal"),
+        };
+        Object.keys(modalTriggers).forEach((triggerId) => {
+          const triggerElement = document.getElementById(triggerId);
+          const modalElement = modalTriggers[triggerId];
+          if (triggerElement && modalElement) {
+            triggerElement.addEventListener("click", () => {
+              if (
+                triggerElement.classList.contains("bento-item") &&
+                triggerElement.classList.contains("expanded")
+              )
+                return;
+              modalElement.classList.add("visible");
+            });
+          }
+        });
+        document.querySelectorAll(".close-modal-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            btn.closest(".modal-overlay").classList.remove("visible");
+          });
+        });
+        document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+          overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+              overlay.classList.remove("visible");
+            }
+          });
+        });
+
+        // --- Expandable Block Logic ---
+        function setupExpandableBlock(blockId) {
+          const expandableBlock = document.getElementById(blockId);
+          if (expandableBlock) {
+            const closeBtn = expandableBlock.querySelector(".close-btn");
+
+            expandableBlock.addEventListener("click", (e) => {
+              if (!expandableBlock.classList.contains("expanded")) {
+                if (e.target.tagName === "A" || e.target.closest("A")) return;
+                document
+                  .querySelectorAll(".bento-item.expanded")
+                  .forEach((item) => {
+                    if (item.id !== blockId) item.classList.remove("expanded");
+                  });
+                expandableBlock.classList.add("expanded");
+              }
+            });
+
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                expandableBlock.classList.remove("expanded");
+              });
+            }
+          }
+        }
+
+        setupExpandableBlock("first-principles-block");
+        setupExpandableBlock("leadership-block");
+        setupExpandableBlock("craft-block");
+        setupExpandableBlock("discipline-block");
+
+        const canvas = document.getElementById("constellation-canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray;
+
+        const mouse = {
+          x: null,
+          y: null,
+          radius: (canvas.height / 120) * (canvas.width / 120),
+        };
+        window.addEventListener("mousemove", (event) => {
+          mouse.x = event.x;
+          mouse.y = event.y;
+        });
+
+        class Particle {
+          constructor(x, y, directionX, directionY, size, color) {
+            this.x = x;
+            this.y = y;
+            this.directionX = directionX;
+            this.directionY = directionY;
+            this.size = size;
+            this.color = color;
+          }
+          draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+            ctx.fillStyle = "rgba(100,100,100,0.2)";
+            ctx.fill();
+          }
+          update() {
+            if (this.x > canvas.width || this.x < 0) {
+              this.directionX = -this.directionX;
+            }
+            if (this.y > canvas.height || this.y < 0) {
+              this.directionY = -this.directionY;
+            }
+            this.x += this.directionX;
+            this.y += this.directionY;
+            this.draw();
+          }
+        }
+
+        function init() {
+          particlesArray = [];
+          let numberOfParticles = (canvas.height * canvas.width) / 9000;
+          for (let i = 0; i < numberOfParticles; i++) {
+            let size = Math.random() * 2 + 1;
+            let x =
+              Math.random() * (innerWidth - size * 2 - size * 2) + size * 2;
+            let y =
+              Math.random() * (innerHeight - size * 2 - size * 2) + size * 2;
+            let directionX = Math.random() * 0.4 - 0.2;
+            let directionY = Math.random() * 0.4 - 0.2;
+            particlesArray.push(
+              new Particle(
+                x,
+                y,
+                directionX,
+                directionY,
+                size,
+                "rgba(100,100,100,0.2)"
+              )
+            );
+          }
+        }
+
+        function connect() {
+          let opacityValue = 1;
+          for (let a = 0; a < particlesArray.length; a++) {
+            for (let b = a; b < particlesArray.length; b++) {
+              let distance =
+                (particlesArray[a].x - particlesArray[b].x) *
+                  (particlesArray[a].x - particlesArray[b].x) +
+                (particlesArray[a].y - particlesArray[b].y) *
+                  (particlesArray[a].y - particlesArray[b].y);
+              if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                opacityValue = 1 - distance / 20000;
+                ctx.strokeStyle = "rgba(100,100,100," + opacityValue + ")";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                ctx.stroke();
+              }
+            }
+          }
+        }
+
+        function animate() {
+          requestAnimationFrame(animate);
+          ctx.clearRect(0, 0, innerWidth, innerHeight);
+          for (let i = 0; i < particlesArray.length; i++) {
+            particlesArray[i].update();
+          }
+          connect();
+        }
+
+        window.addEventListener("resize", () => {
+          canvas.width = innerWidth;
+          canvas.height = innerHeight;
+          mouse.radius = (canvas.height / 120) * (canvas.width / 120);
+          init();
+        });
+
+        window.addEventListener("mouseout", () => {
+          mouse.x = undefined;
+          mouse.y = undefined;
+        });
+
+        init();
+        animate();
+      });
+    </script>
+  </body>
+</html>
