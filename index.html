@@ -11,8 +11,9 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <!-- The core GSAP animation library -->
+    <!-- Animation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
     <style>
       html {
@@ -412,6 +413,7 @@
           </div>
         </div>
 
+        <!-- Reverted this block to its original state -->
         <div
           id="craft-block"
           class="bento-item col-span-4 md:col-span-2 bg-image-container cursor-pointer"
@@ -605,7 +607,8 @@
         <div class="max-w-3xl mx-auto">
           <h3 class="text-2xl font-bold text-slate-200 mb-8">Experience</h3>
           <div class="space-y-12">
-            <div class="flex gap-x-6">
+            <!-- Added class="chronology-item" for animation targeting -->
+            <div class="flex gap-x-6 chronology-item">
               <div class="w-32 text-right text-slate-400 font-medium shrink-0">
                 Jun 2024 - Sep 2024
               </div>
@@ -620,7 +623,7 @@
                 </p>
               </div>
             </div>
-            <div class="flex gap-x-6">
+            <div class="flex gap-x-6 chronology-item">
               <div class="w-32 text-right text-slate-400 font-medium shrink-0">
                 Jun 2021 - Sep 2021
               </div>
@@ -635,7 +638,7 @@
                 </p>
               </div>
             </div>
-            <div class="flex gap-x-6">
+            <div class="flex gap-x-6 chronology-item">
               <div class="w-32 text-right text-slate-400 font-medium shrink-0">
                 Sep 2024 - Dec 2024
               </div>
@@ -650,7 +653,7 @@
                 </p>
               </div>
             </div>
-            <div class="flex gap-x-6">
+            <div class="flex gap-x-6 chronology-item">
               <div class="w-32 text-right text-slate-400 font-medium shrink-0">
                 Mar 2022 – Jun 2024
               </div>
@@ -671,7 +674,7 @@
             Education
           </h3>
           <div class="space-y-8">
-            <div class="flex gap-x-6">
+            <div class="flex gap-x-6 chronology-item">
               <div class="w-32 text-right text-slate-400 font-medium shrink-0">
                 Sep 2020 - Dec 2024
               </div>
@@ -815,6 +818,8 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+        gsap.registerPlugin(ScrollTrigger);
+
         // --- GSAP "GRAND ENTRANCE" ANIMATION ---
         const mainHeadline = document.getElementById("main-headline");
         const subHeadline = document.getElementById("sub-headline");
@@ -826,7 +831,6 @@
         const chars = mainHeadlineText.split("");
         chars.forEach((char) => {
           const span = document.createElement("span");
-          // *** THIS IS THE FIX: Use a non-breaking space for the space character ***
           if (char === " ") {
             span.innerHTML = "&nbsp;";
           } else {
@@ -876,6 +880,23 @@
           },
           "-=0.6" // Overlap with the sub-headline animation
         );
+
+        // --- CHRONOLOGY SCROLL ANIMATION ---
+        const chronologyItems = document.querySelectorAll(".chronology-item");
+        chronologyItems.forEach((item) => {
+          gsap.from(item, {
+            scrollTrigger: {
+              trigger: item,
+              start: "top 85%", // When the top of the item hits 85% from the top of the viewport
+              end: "bottom 20%",
+              toggleActions: "play none none none", // Play the animation on enter
+            },
+            opacity: 0,
+            y: 50,
+            duration: 0.8,
+            ease: "power3.out",
+          });
+        });
 
         // --- BENTO ITEM 3D TILT EFFECT (Your Original Code) ---
         const allBentoItems = document.querySelectorAll(".bento-item");
