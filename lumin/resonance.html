@@ -535,25 +535,31 @@ function generatePalette(overrideFeeling) {
       'anthropic-dangerous-direct-browser-access': 'true'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 300,
       messages: [{role:'user', content: SYS + '\n\nGenerate a 5-color palette for: "' + feeling + '"'}]
     })
   })
   .then(function(res) {
-    if (!res.ok) throw new Error(res.status);
+    if (!res.ok) {
+      return res.json().then(function(body) {
+        console.error('API response:', res.status, body);
+        throw new Error(String(res.status));
+      });
+    }
     return res.json();
   })
   .then(function(data) {
     var text = data.content.map(function(b){return b.text||''}).join('').trim();
-    var match = text.match(/\[.*\]/s);
-    if (!match) throw new Error('no array');
+    console.log('API raw response:', text);
+    var match = text.match(/\[[\s\S]*?\]/);
+    if (!match) throw new Error('no array in: ' + text.slice(0, 200));
     var hexes = JSON.parse(match[0]);
-    if (hexes.length !== 5 || !hexes.every(function(h){return /^#[0-9A-Fa-f]{6}$/.test(h)})) throw new Error('bad');
+    if (hexes.length !== 5 || !hexes.every(function(h){return /^#[0-9A-Fa-f]{6}$/.test(h)})) throw new Error('bad format: ' + JSON.stringify(hexes));
     renderPalette(hexes, feeling);
   })
   .catch(function(e) {
-    console.error('API error:', e);
+    console.error('Resonance API error:', e.message);
     if (e.message === '401' || e.message === '403') {
       clearKey();
       pendingFeeling = feeling;
@@ -561,7 +567,11 @@ function generatePalette(overrideFeeling) {
       document.getElementById('loading').classList.remove('active');
       return;
     }
-    renderPalette(['#6B7280','#374151','#9CA3AF','#4B5563','#D1D5DB'], feeling);
+    // Show error state instead of grey fallback
+    document.getElementById('loading').classList.remove('active');
+    var errEl = document.getElementById('output');
+    errEl.classList.add('active');
+    document.getElementById('paletteStrip').innerHTML = '<div style="text-align:center;padding:2rem;font-family:IBM Plex Mono,monospace;font-size:.5rem;color:rgba(255,255,255,0.4);letter-spacing:.08em">Generation failed. Check your API key and try again.</div>';
   });
 }
 
