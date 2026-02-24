@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMIN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Sora:wght@200;300;400;500;600&family=Crimson+Pro:ital,wght@0,200;0,300;0,400;1,200;1,300;1,400&display=swap');
+
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --void: #060608;
+    --glass: rgba(255, 255, 255, 0.03);
+    --glass-edge: rgba(255, 255, 255, 0.06);
+    --glass-lit: rgba(255, 255, 255, 0.05);
+    --text-full: rgba(255, 255, 255, 0.88);
+    --text-mid: rgba(255, 255, 255, 0.45);
+    --text-dim: rgba(255, 255, 255, 0.18);
+    --text-ghost: rgba(255, 255, 255, 0.08);
+    --rose: #d4a0a0;
+    --rose-glow: rgba(212, 160, 160, 0.12);
+    --sky: #a0b8d4;
+    --gold: #d4c0a0;
+    --ink: #1a1a2e;
+  }
+
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar { display: none; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--void);
+    color: var(--text-full);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: rgba(212, 160, 160, 0.2);
+    color: var(--text-full);
+  }
+
+  /* ═══════════════════════════════════════
+     ATMOSPHERE — THE LIVING CANVAS
+     ═══════════════════════════════════════ */
+
+  .atmo {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Primary color field — slowly breathing gradient */
+  .atmo-field {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 130% 70% at 25% 55%, rgba(212, 160, 160, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 90% 80% at 75% 35%, rgba(160, 184, 212, 0.04) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 50% at 50% 90%, rgba(212, 192, 160, 0.03) 0%, transparent 40%);
+    animation: fieldBreathe 30s ease-in-out infinite alternate;
+  }
+
+  @keyframes fieldBreathe {
+    0%   { transform: scale(1) translate(0, 0); opacity: 1; }
+    25%  { transform: scale(1.03) translate(-0.5%, 0.5%); opacity: 0.8; }
+    50%  { transform: scale(1.01) translate(0.3%, -0.3%); opacity: 0.9; }
+    75%  { transform: scale(1.04) translate(-0.2%, 0.2%); opacity: 0.85; }
+    100% { transform: scale(1) translate(0, 0); opacity: 1; }
+  }
+
+  /* Perspective grid floor — mirrored landscape reference */
+  .atmo-grid {
+    position: absolute;
+    bottom: 0;
+    left: -30%;
+    right: -30%;
+    height: 45%;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 100px 100px;
+    transform: perspective(600px) rotateX(60deg);
+    transform-origin: bottom center;
+    mask-image: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 60%);
+    animation: gridPulse 15s ease-in-out infinite alternate;
+  }
+
+  @keyframes gridPulse {
+    0%   { opacity: 0.3; }
+    50%  { opacity: 0.55; }
+    100% { opacity: 0.3; }
+  }
+
+  /* Subtle horizontal light band — dawn line */
+  .atmo-horizon {
+    position: absolute;
+    bottom: 38%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 10%, rgba(212, 160, 160, 0.08) 30%, rgba(160, 184, 212, 0.06) 70%, transparent 90%);
+    filter: blur(2px);
+    animation: horizonShimmer 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes horizonShimmer {
+    0%   { opacity: 0.4; }
+    50%  { opacity: 0.8; }
+    100% { opacity: 0.4; }
+  }
+
+  /* Particles — light rising from the grid */
+  .mote {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: moteRise linear infinite;
+  }
+
+  @keyframes moteRise {
+    0%   { opacity: 0; transform: translateY(0) translateX(0); }
+    8%   { opacity: var(--mote-peak, 0.4); }
+    85%  { opacity: var(--mote-peak, 0.4); }
+    100% { opacity: 0; transform: translateY(calc(-70vh - 50px)) translateX(var(--mote-drift, 15px)); }
+  }
+
+  /* ═══════════════════════════════════════
+     CURSOR RESPONSE
+     ═══════════════════════════════════════ */
+
+  .cursor-aura {
+    position: fixed;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212, 160, 160, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    mix-blend-mode: screen;
+  }
+
+  body:hover .cursor-aura { opacity: 1; }
+
+  /* ═══════════════════════════════════════
+     VEIL — THE THRESHOLD
+     ═══════════════════════════════════════ */
+
+  .veil {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: var(--void);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .veil.dissolve {
+    animation: veilDissolve 1.8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+
+  @keyframes veilDissolve {
+    0%   { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; pointer-events: none; }
+  }
+
+  .veil-word {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-weight: 300;
+    letter-spacing: 0.5em;
+    text-indent: 0.5em;
+    text-transform: uppercase;
+    color: var(--text-full);
+    opacity: 0;
+  }
+
+  .veil-word.show {
+    animation: breatheIn 2.2s cubic-bezier(0.25, 0, 0.1, 1) forwards;
+  }
+
+  @keyframes breatheIn {
+    0%   { opacity: 0; transform: translateY(12px) scale(0.98); letter-spacing: 0.7em; }
+    100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 0.5em; }
+  }
+
+  .veil-line {
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rose), transparent);
+  }
+
+  .veil-line.expand {
+    animation: lineGrow 1.2s cubic-bezier(0.25, 0, 0.1, 1) forwards;
+  }
+
+  @keyframes lineGrow {
+    to { width: 80px; }
+  }
+
+  .veil-breath {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    opacity: 0;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  .veil-breath:hover {
+    color: var(--text-mid);
+  }
+
+  .veil-breath.show {
+    animation: breatheIn 1.5s cubic-bezier(0.25, 0, 0.1, 1) forwards;
+  }
+
+  /* ═══════════════════════════════════════
+     MAIN — THE SPACE
+     ═══════════════════════════════════════ */
+
+  .space {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+
+  .space.awake { opacity: 1; }
+
+  /* ─── SECTION: OPENING ─── */
+
+  .opening {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .opening-inner {
+    max-width: 680px;
+  }
+
+  .opening-marker {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--text-ghost);
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeIn 1s ease 0.5s forwards;
+  }
+
+  .opening-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    font-weight: 300;
+    line-height: 1.2;
+    letter-spacing: 0.015em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: riseIn 1.2s cubic-bezier(0.25, 0, 0.1, 1) 0.8s forwards;
+  }
+
+  .opening-title em {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .opening-scroll {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 4rem;
+    opacity: 0;
+    animation: fadeIn 1s ease 2s forwards;
+  }
+
+  .opening-scroll span {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(4px); }
+  }
+
+  /* ─── SECTION: THE WRITING ─── */
+
+  .prose-section {
+    padding: 8rem 2rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .prose-block {
+    max-width: 600px;
+    width: 100%;
+  }
+
+  .prose {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(1rem, 1.8vw, 1.15rem);
+    font-weight: 300;
+    line-height: 2;
+    color: var(--text-mid);
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .prose.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .prose + .prose {
+    margin-top: 2.5rem;
+  }
+
+  .prose strong {
+    font-weight: 400;
+    color: var(--text-full);
+  }
+
+  .prose em {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  /* The pull-quote — a single line that hits different */
+  .pull {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--text-full);
+    text-align: center;
+    padding: 5rem 2rem;
+    max-width: 700px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+
+  .pull.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── SECTION: THE ROOMS ─── */
+
+  .rooms-section {
+    padding: 4rem 2rem 8rem;
+  }
+
+  .rooms-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .rooms-header.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .rooms-label {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+  }
+
+  .rooms-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.5rem, 3vw, 2.4rem);
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: var(--text-mid);
+  }
+
+  /* Room cards — four glass panels */
+  .rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    max-width: 1100px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s;
+  }
+
+  .rooms-grid.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .room-card {
+    position: relative;
+    padding: 2.5rem 1.8rem 2rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-edge);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.25, 0, 0.1, 1);
+    overflow: hidden;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+  }
+
+  .room-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .room-card[data-room="velvet"]::before  { background: radial-gradient(ellipse at 50% 80%, rgba(30, 35, 80, 0.2) 0%, transparent 70%); }
+  .room-card[data-room="solvei"]::before  { background: radial-gradient(ellipse at 50% 80%, rgba(0, 140, 180, 0.1) 0%, transparent 70%); }
+  .room-card[data-room="carmine"]::before { background: radial-gradient(ellipse at 50% 80%, rgba(160, 60, 60, 0.1) 0%, transparent 70%); }
+  .room-card[data-room="kismet"]::before  { background: radial-gradient(ellipse at 50% 80%, rgba(180, 150, 100, 0.1) 0%, transparent 70%); }
+
+  .room-card:hover::before { opacity: 1; }
+
+  .room-card:hover {
+    background: var(--glass-lit);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .card-idx {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.45rem;
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    color: var(--text-ghost);
+    margin-bottom: auto;
+  }
+
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.4rem;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.7) 0%,
+      rgba(212, 190, 200, 0.8) 25%,
+      rgba(190, 210, 225, 0.8) 50%,
+      rgba(220, 210, 190, 0.8) 75%,
+      rgba(255, 255, 255, 0.7) 100%
+    );
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: holographicShift 8s ease-in-out infinite;
+    transition: filter 0.4s ease;
+  }
+
+  @keyframes holographicShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .room-card:hover .card-name {
+    filter: brightness(1.3);
+  }
+
+  .room-card[data-room="velvet"]:hover .card-name  { color: rgba(180, 190, 220, 0.9); }
+  .room-card[data-room="solvei"]:hover .card-name  { color: rgba(170, 210, 220, 0.9); }
+  .room-card[data-room="carmine"]:hover .card-name { color: rgba(220, 185, 185, 0.9); }
+  .room-card[data-room="kismet"]:hover .card-name  { color: rgba(220, 205, 175, 0.9); }
+
+  .card-sub {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.8rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text-dim);
+    transition: color 0.4s ease;
+  }
+
+  .room-card:hover .card-sub { color: var(--text-mid); }
+
+  .card-arrow {
+    position: absolute;
+    bottom: 1.8rem;
+    right: 1.8rem;
+    width: 20px;
+    height: 20px;
+    opacity: 0;
+    transform: translate(-4px, 4px);
+    transition: all 0.4s ease;
+  }
+
+  .room-card:hover .card-arrow {
+    opacity: 0.4;
+    transform: translate(0, 0);
+  }
+
+  .card-arrow svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--text-mid);
+    stroke-width: 1.5;
+    fill: none;
+  }
+
+  /* ─── FOOTER ─── */
+
+  .foot {
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+  }
+
+  .foot-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 300;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    margin-bottom: 1.5rem;
+  }
+
+  .foot-back:hover { color: var(--text-mid); }
+
+  .foot-line {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.5rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: var(--text-ghost);
+  }
+
+  /* ═══════════════════════════════════════
+     RESPONSIVE
+     ═══════════════════════════════════════ */
+
+  @media (max-width: 900px) {
+    .rooms-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .rooms-grid {
+      grid-template-columns: 1fr;
+    }
+    .room-card {
+      min-height: auto;
+      padding: 2rem 1.5rem;
+    }
+    .prose-section {
+      padding: 5rem 1.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor-aura" id="aura"></div>
+
+<!-- ATMOSPHERE -->
+<div class="atmo">
+  <div class="atmo-field"></div>
+  <div class="atmo-grid"></div>
+  <div class="atmo-horizon"></div>
+</div>
+
+<!-- VEIL -->
+<div class="veil" id="veil">
+  <div class="veil-word" id="veilWord">Lumin</div>
+  <div class="veil-line" id="veilLine"></div>
+  <div class="veil-breath" id="veilBreath" onclick="enterSpace()">Enter</div>
+</div>
+
+<!-- SPACE -->
+<main class="space" id="space">
+
+  <!-- OPENING -->
+  <section class="opening">
+    <div class="opening-inner">
+      <p class="opening-marker">Room 00 — The Lobby</p>
+      <h1 class="opening-title">This is not a portfolio.<br>This is where everything <em>lives.</em></h1>
+      <p class="opening-scroll"><span>↓</span></p>
+    </div>
+  </section>
+
+  <!-- THE WRITING — This is the core. Every word engineered. -->
+  <section class="prose-section">
+    <div class="prose-block">
+
+      <p class="prose reveal">
+        I don't talk much. Never have. But my head doesn't stop. It never stops. There are rooms in there — dozens of them — and each one has something building inside it. A melody I haven't finished. A system I'm stress-testing against five years of market data. A character I've been shaping for months, someone who doesn't exist yet but feels more real to me than most people I've met.
+      </p>
+
+      <p class="prose reveal">
+        For a long time, none of it could come out. I could <em>see</em> it — perfectly, clearly, in full resolution — but the distance between what I saw and what I could make was unbearable. I think that gap is the thing that breaks most people. Not the lack of vision. The inability to close the distance between the vision and the artifact.
+      </p>
+
+      <p class="prose reveal">
+        <strong>That distance is gone now.</strong>
+      </p>
+
+      <p class="prose reveal">
+        I don't know how to explain what changed except that the tools caught up. Or I caught up. Or both happened at the same time and the timing was the thing that mattered. But I can build now. Everything. The music I hear when I close my eyes. The manga that's been living in my chest for years. The trading systems. The games. The things that don't have names yet because no one's built them before.
+      </p>
+
+    </div>
+  </section>
+
+  <div class="pull reveal">
+    I want to give people feelings they didn't know they were capable of having.
+  </div>
+
+  <section class="prose-section">
+    <div class="prose-block">
+
+      <p class="prose reveal">
+        That's what this place is. Not a showcase. Not a résumé someone scrolls through in eleven seconds and forgets. This is the building where the rooms live. Each one holds a different frequency. Sound has a room. Engineering has a room. The raw, unedited version of my thinking has a room. And the things I build with a mind that isn't mine — but feels like it is — that has a room too.
+      </p>
+
+      <p class="prose reveal">
+        I build things with an obsessive kind of precision that I've never been able to explain to anyone. Not because I'm precious about it. Because I think the gap between <em>good</em> and <em>perfect</em> is where all the feeling lives. A gradient that's 2% off doesn't register consciously. But your nervous system knows. It always knows. And I'd rather spend four hours on a thing no one will ever notice than release something that doesn't feel right at a frequency most people can't hear.
+      </p>
+
+      <p class="prose reveal">
+        <strong>That's the standard here.</strong> Everything in this space is built at that resolution. Not because anyone asked for it. Because I can't do it any other way.
+      </p>
+
+      <p class="prose reveal">
+        Whoever you are — however you ended up here — welcome. Take your time. These rooms aren't going anywhere. Neither am I.
+      </p>
+
+    </div>
+  </section>
+
+  <div class="pull reveal" style="padding-bottom: 2rem;">
+    Choose a room.
+  </div>
+
+  <!-- THE ROOMS -->
+  <section class="rooms-section">
+    <div class="rooms-header reveal">
+      <p class="rooms-label">The Rooms</p>
+      <h2 class="rooms-title">Four frequencies. Four worlds.</h2>
+    </div>
+
+    <div class="rooms-grid reveal">
+
+      <a class="room-card" data-room="velvet" href="/velvet">
+        <span class="card-idx">01</span>
+        <div class="card-name">Velvet</div>
+        <div class="card-sub">Where sound breathes</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9,5 19,5 19,15"/></svg></div>
+      </a>
+
+      <a class="room-card" data-room="solvei" href="/solvei">
+        <span class="card-idx">02</span>
+        <div class="card-name">Solvei</div>
+        <div class="card-sub">Where systems prove themselves</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9,5 19,5 19,15"/></svg></div>
+      </a>
+
+      <a class="room-card" data-room="carmine" href="/carmine">
+        <span class="card-idx">03</span>
+        <div class="card-name">Carmine</div>
+        <div class="card-sub">Where the mind speaks raw</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9,5 19,5 19,15"/></svg></div>
+      </a>
+
+      <a class="room-card" data-room="kismet" href="/kismet">
+        <span class="card-idx">04</span>
+        <div class="card-name">Kismet</div>
+        <div class="card-sub">Where human meets machine</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9,5 19,5 19,15"/></svg></div>
+      </a>
+
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a class="foot-back" href="/">← Surface</a>
+    <p class="foot-line">Arnaud Saint-Pierre · 2026</p>
+  </footer>
+
+</main>
+
+<script>
+  // ═══════════════════════════════════════
+  // PARTICLES — engineered density
+  // ═══════════════════════════════════════
+
+  const atmo = document.querySelector('.atmo');
+
+  function spawnMote() {
+    const m = document.createElement('div');
+    m.classList.add('mote');
+
+    const size = 1 + Math.random() * 1.5;
+    const x = 10 + Math.random() * 80;
+    const dur = 12 + Math.random() * 18;
+    const delay = Math.random() * 8;
+    const drift = -20 + Math.random() * 40;
+    const peak = 0.15 + Math.random() * 0.3;
+
+    const colors = ['var(--rose)', 'var(--sky)', 'var(--gold)', 'rgba(255,255,255,0.3)'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+
+    m.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      left: ${x}%; bottom: 5%;
+      background: ${color};
+      animation-duration: ${dur}s;
+      animation-delay: ${delay}s;
+      --mote-drift: ${drift}px;
+      --mote-peak: ${peak};
+    `;
+
+    atmo.appendChild(m);
+    setTimeout(() => m.remove(), (dur + delay) * 1000);
+  }
+
+  setInterval(spawnMote, 600);
+  for (let i = 0; i < 20; i++) setTimeout(spawnMote, i * 150);
+
+  // ═══════════════════════════════════════
+  // CURSOR AURA
+  // ═══════════════════════════════════════
+
+  const aura = document.getElementById('aura');
+  let mx = 0, my = 0, ax = 0, ay = 0;
+
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+  (function trackAura() {
+    ax += (mx - ax) * 0.06;
+    ay += (my - ay) * 0.06;
+    aura.style.left = ax + 'px';
+    aura.style.top = ay + 'px';
+    requestAnimationFrame(trackAura);
+  })();
+
+  // ═══════════════════════════════════════
+  // VEIL SEQUENCE
+  // ═══════════════════════════════════════
+
+  const veil     = document.getElementById('veil');
+  const veilWord = document.getElementById('veilWord');
+  const veilLine = document.getElementById('veilLine');
+  const veilBtn  = document.getElementById('veilBreath');
+  const space    = document.getElementById('space');
+
+  // Staggered reveal
+  setTimeout(() => veilWord.classList.add('show'), 400);
+  setTimeout(() => veilLine.classList.add('expand'), 1800);
+  setTimeout(() => veilBtn.classList.add('show'), 2800);
+
+  function enterSpace() {
+    veil.classList.add('dissolve');
+    setTimeout(() => space.classList.add('awake'), 600);
+  }
+
+  // ═══════════════════════════════════════
+  // SCROLL REVEAL — intersection observer
+  // ═══════════════════════════════════════
+
+  const reveals = document.querySelectorAll('.reveal');
+
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '-40px'
+  });
+
+  reveals.forEach(el => revealObs.observe(el));
+
+  // ═══════════════════════════════════════
+  // CARD TILT
+  // ═══════════════════════════════════════
+
+  document.querySelectorAll('.room-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `perspective(800px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg) translateY(-1px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+</script>
+
+</body>
+</html>

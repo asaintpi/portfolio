@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resonance — Instrument 01</title>
+<meta name="description" content="Describe a feeling. Receive its colors. A perceptual color instrument by Arnaud Saint-Pierre.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Sora:wght@200;300;400;500&family=Crimson+Pro:ital,wght@0,200;0,300;0,400;1,300&family=IBM+Plex+Mono:wght@300;400&family=Libre+Caslon+Display&family=Outfit:wght@200;300;400;500&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --void: #060608;
+    --glass: rgba(255,255,255,0.02);
+    --glass-edge: rgba(255,255,255,0.04);
+    --text-full: rgba(255,255,255,0.88);
+    --text-mid: rgba(255,255,255,0.38);
+    --text-dim: rgba(255,255,255,0.15);
+    --text-ghost: rgba(255,255,255,0.06);
+    --accent: rgba(192,210,225,0.7);
+  }
+
+  html { font-size: 16px; scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+  body { font-family: 'Sora', sans-serif; background: var(--void); color: var(--text-full); overflow-x: hidden; min-height: 100vh; }
+  ::selection { background: rgba(192,210,225,0.2); }
+
+  #aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ─── Back nav ─── */
+  .nav-back {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+    background: rgba(6,6,8,0.7); backdrop-filter: blur(30px);
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+  .nav-back a {
+    font-family: 'IBM Plex Mono', monospace; font-size: .44rem; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--text-dim); text-decoration: none;
+    display: flex; align-items: center; gap: .5rem; transition: color .3s;
+  }
+  .nav-back a:hover { color: var(--text-mid); }
+  .nav-label {
+    font-family: 'Cormorant Garamond', serif; font-size: .82rem; font-weight: 400;
+    letter-spacing: .08em; color: var(--text-dim);
+  }
+  .key-status {
+    display: flex; align-items: center; gap: .5rem; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace; font-size: .42rem; letter-spacing: .1em;
+    color: var(--text-dim); transition: color .3s; user-select: none;
+  }
+  .key-status:hover { color: var(--text-mid); }
+  .key-dot { width: 5px; height: 5px; border-radius: 50%; transition: background .4s; }
+  .key-dot.off { background: rgba(255,255,255,0.1); }
+  .key-dot.on { background: rgba(120,200,140,0.7); box-shadow: 0 0 8px rgba(120,200,140,0.3); }
+
+  .instrument { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; max-width: 880px; margin: 0 auto; padding: 5.5rem 1.5rem 4rem; }
+
+  .res-hero { padding-bottom: 3.2rem; text-align: center; }
+  .res-label { font-size: 0.4rem; font-weight: 400; letter-spacing: 0.5em; text-transform: uppercase; color: var(--text-ghost); margin-bottom: 1.1rem; }
+  .res-title {
+    font-family: 'Cormorant Garamond', serif; font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 300;
+    letter-spacing: 0.015em; margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(215,192,202,0.85), rgba(192,212,228,0.82), rgba(222,212,192,0.85), rgba(255,255,255,0.7));
+    background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: shimmer 8s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  .res-sub { font-family: 'Crimson Pro', serif; font-size: 0.88rem; font-weight: 300; font-style: italic; color: rgba(255,255,255,0.12); }
+  .res-hint { font-family: 'Sora', sans-serif; font-size: 0.52rem; font-weight: 300; color: rgba(255,255,255,0.1); margin-top: 1.2rem; letter-spacing: 0.04em; transition: opacity 1.5s ease; }
+
+  .res-input-zone { padding-bottom: 2rem; display: flex; justify-content: center; }
+  .res-input-wrap { position: relative; max-width: 540px; width: 100%; }
+  .res-input { width: 100%; padding: 1.15rem 3.5rem 1.15rem 1.5rem; background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 3px; font-family: 'Crimson Pro', serif; font-size: 1.05rem; font-weight: 300; font-style: italic; color: var(--text-full); outline: none; transition: all 0.4s ease; }
+  .res-input::placeholder { color: rgba(255,255,255,0.1); font-style: italic; }
+  .res-input:focus { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
+  .res-submit { position: absolute; right: 1px; top: 1px; bottom: 1px; width: 48px; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.2; color: white; font-size: 1.1rem; font-family: 'Crimson Pro', serif; transition: opacity 0.3s; }
+  .res-submit:hover { opacity: 0.45; }
+
+  .res-presets { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.45rem; padding-bottom: 0.75rem; }
+  .res-presets:last-of-type { padding-bottom: 3.5rem; }
+  .preset {
+    padding: 0.42rem 1rem; font-family: 'Sora', sans-serif; font-size: 0.56rem; font-weight: 300;
+    letter-spacing: 0.08em; background: transparent; border: 1px solid rgba(255,255,255,0.035);
+    cursor: pointer; transition: all 0.4s cubic-bezier(0.22,0.61,0.36,1); border-radius: 2px; color: var(--text-dim);
+  }
+  .preset[data-tint="red"]:hover { color: rgba(200,60,60,0.88); border-color: rgba(200,60,60,0.15); background: rgba(200,60,60,0.04); box-shadow: 0 0 24px rgba(200,60,60,0.06), inset 0 0 16px rgba(200,60,60,0.03); text-shadow: 0 0 14px rgba(200,60,60,0.25); }
+  .preset[data-tint="blue"]:hover { color: rgba(60,90,200,0.88); border-color: rgba(60,90,200,0.15); background: rgba(60,90,200,0.04); box-shadow: 0 0 24px rgba(60,90,200,0.06), inset 0 0 16px rgba(60,90,200,0.03); text-shadow: 0 0 14px rgba(60,90,200,0.25); }
+  .preset[data-tint="green"]:hover { color: rgba(60,160,80,0.88); border-color: rgba(60,160,80,0.15); background: rgba(60,160,80,0.04); box-shadow: 0 0 24px rgba(60,160,80,0.06), inset 0 0 16px rgba(60,160,80,0.03); text-shadow: 0 0 14px rgba(60,160,80,0.25); }
+  .preset[data-tint="yellow"]:hover { color: rgba(200,180,50,0.88); border-color: rgba(200,180,50,0.15); background: rgba(200,180,50,0.04); box-shadow: 0 0 24px rgba(200,180,50,0.06), inset 0 0 16px rgba(200,180,50,0.03); text-shadow: 0 0 14px rgba(200,180,50,0.25); }
+  .preset[data-tint="black"]:hover { color: rgba(150,150,158,0.88); border-color: rgba(150,150,158,0.15); background: rgba(150,150,158,0.04); box-shadow: 0 0 24px rgba(150,150,158,0.06), inset 0 0 16px rgba(150,150,158,0.03); text-shadow: 0 0 14px rgba(150,150,158,0.2); }
+  .preset[data-tint="white"]:hover { color: rgba(225,218,205,0.88); border-color: rgba(225,218,205,0.15); background: rgba(225,218,205,0.04); box-shadow: 0 0 24px rgba(225,218,205,0.06), inset 0 0 16px rgba(225,218,205,0.03); text-shadow: 0 0 14px rgba(225,218,205,0.2); }
+  .preset[data-tint="pink"]:hover { color: rgba(210,110,150,0.88); border-color: rgba(210,110,150,0.15); background: rgba(210,110,150,0.04); box-shadow: 0 0 24px rgba(210,110,150,0.06), inset 0 0 16px rgba(210,110,150,0.03); text-shadow: 0 0 14px rgba(210,110,150,0.25); }
+  .preset[data-tint="gold"]:hover { color: rgba(200,165,55,0.88); border-color: rgba(200,165,55,0.15); background: rgba(200,165,55,0.04); box-shadow: 0 0 24px rgba(200,165,55,0.06), inset 0 0 16px rgba(200,165,55,0.03); text-shadow: 0 0 14px rgba(200,165,55,0.25); }
+  .preset.feel:hover { color: rgba(255,255,255,0.42); border-color: rgba(255,255,255,0.07); background: rgba(255,255,255,0.025); }
+
+  /* ─── Key onboarding panel ─── */
+  .key-panel {
+    max-width: 540px; width: 100%; margin: 0 auto; padding: 2rem 2rem 2.2rem;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 6px; backdrop-filter: blur(20px);
+    opacity: 0; transform: translateY(12px);
+    transition: opacity .5s ease, transform .5s ease;
+    display: none;
+  }
+  .key-panel.active { display: block; opacity: 1; transform: translateY(0); }
+  .key-panel-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 300;
+    color: rgba(255,255,255,0.55); margin-bottom: 1rem;
+  }
+  .key-panel-text {
+    font-family: 'Crimson Pro', serif; font-size: .82rem; font-weight: 300;
+    font-style: italic; color: rgba(255,255,255,0.22); line-height: 1.7; margin-bottom: 1.5rem;
+  }
+  .key-panel-text a {
+    color: rgba(192,210,225,0.7); text-decoration: none; border-bottom: 1px solid rgba(192,210,225,0.15);
+    transition: all .3s;
+  }
+  .key-panel-text a:hover { color: rgba(192,210,225,0.9); border-color: rgba(192,210,225,0.4); }
+  .key-input-wrap { display: flex; gap: .5rem; }
+  .key-input {
+    flex: 1; padding: .8rem 1rem; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: .7rem; font-weight: 300;
+    color: var(--text-full); outline: none; transition: all .3s;
+  }
+  .key-input::placeholder { color: rgba(255,255,255,0.08); }
+  .key-input:focus { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.035); }
+  .key-save {
+    padding: .8rem 1.5rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px; font-family: 'Sora'; font-size: .5rem; font-weight: 400;
+    letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.4);
+    cursor: pointer; transition: all .3s;
+  }
+  .key-save:hover { color: rgba(255,255,255,0.65); border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); }
+  .key-panel-note {
+    font-family: 'IBM Plex Mono', monospace; font-size: .42rem; color: rgba(255,255,255,0.08);
+    margin-top: 1rem; letter-spacing: .05em; line-height: 1.6;
+  }
+
+  /* ─── Key manage modal ─── */
+  .key-modal {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(6,6,8,0.85); backdrop-filter: blur(20px);
+    align-items: center; justify-content: center;
+  }
+  .key-modal.active { display: flex; }
+  .key-modal-inner {
+    max-width: 400px; width: 90%; padding: 2.5rem; background: rgba(20,20,22,0.95);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+  }
+  .key-modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,0.55); margin-bottom: 1.2rem; }
+  .key-modal-status { font-family: 'IBM Plex Mono', monospace; font-size: .6rem; color: rgba(120,200,140,0.7); margin-bottom: 1.5rem; letter-spacing: .05em; }
+  .key-modal-actions { display: flex; gap: .5rem; }
+  .key-modal-btn {
+    padding: .6rem 1.2rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 3px; font-family: 'Sora'; font-size: .48rem; font-weight: 400;
+    letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,0.3);
+    cursor: pointer; transition: all .3s;
+  }
+  .key-modal-btn:hover { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.1); }
+  .key-modal-btn.danger:hover { color: rgba(200,80,80,0.8); border-color: rgba(200,80,80,0.2); }
+
+  .res-loading { display: none; flex-direction: column; align-items: center; gap: 1.2rem; padding: 5.5rem 0; }
+  .res-loading.active { display: flex; }
+  .loading-orb { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.05); animation: breathe 2s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { opacity: 0.25; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.06); } }
+  .loading-text { font-family: 'Crimson Pro', serif; font-size: 0.8rem; font-weight: 300; font-style: italic; color: rgba(255,255,255,0.1); }
+
+  .res-output { flex: 1; display: flex; flex-direction: column; align-items: center; opacity: 0; transform: translateY(24px); transition: opacity 0.9s cubic-bezier(0.22,0.61,0.36,1), transform 0.9s cubic-bezier(0.22,0.61,0.36,1); }
+  .res-output.active { opacity: 1; transform: translateY(0); }
+
+  .palette-strip { display: flex; width: 100%; height: 260px; border-radius: 8px; overflow: hidden; margin-bottom: 2.5rem; box-shadow: 0 4px 64px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.015); }
+  .swatch + .swatch { border-left: 1px solid rgba(255,255,255,0.025); }
+  .swatch {
+    flex: 1; position: relative; cursor: pointer; display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 1.3rem; overflow: hidden;
+    transition: flex 0.6s cubic-bezier(0.22,0.61,0.36,1), filter 0.4s ease;
+  }
+  .swatch::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(155deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.025) 22%, transparent 48%, transparent 68%, rgba(255,255,255,0.015) 88%, rgba(255,255,255,0.05) 100%);
+    transition: all 0.4s ease;
+  }
+  .swatch:hover { flex: 2.2; filter: brightness(1.1); z-index: 2; }
+  .swatch:hover::before { background: linear-gradient(155deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.06) 22%, transparent 48%, transparent 68%, rgba(255,255,255,0.04) 88%, rgba(255,255,255,0.12) 100%); }
+  .swatch-info { opacity: 0; transform: translateY(8px); transition: all 0.4s cubic-bezier(0.22,0.61,0.36,1); pointer-events: none; }
+  .swatch:hover .swatch-info { opacity: 1; transform: translateY(0); transition-delay: 0.12s; }
+  .swatch-hex { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.06em; margin-bottom: 0.25rem; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
+  .swatch-role { font-family: 'Sora', sans-serif; font-size: 0.42rem; font-weight: 300; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.55; text-shadow: 0 1px 4px rgba(0,0,0,0.5); margin-bottom: 0.2rem; }
+  .swatch-de { font-family: 'IBM Plex Mono', monospace; font-size: 0.42rem; font-weight: 300; opacity: 0.35; text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+  .swatch-copied { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.8); font-family: 'Sora'; font-size: 0.48rem; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase; opacity: 0; transition: all 0.3s ease; text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
+  .swatch.copied .swatch-copied { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+
+  .perceptual-map { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin-bottom: 2.5rem; }
+  .map-card { padding: 1.3rem 1.4rem; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.03); transition: background 0.3s ease; }
+  .map-card:hover { background: rgba(255,255,255,0.03); }
+  .map-label { font-size: 0.4rem; font-weight: 400; letter-spacing: 0.32em; text-transform: uppercase; color: var(--text-ghost); margin-bottom: 0.5rem; }
+  .map-value { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-weight: 300; color: rgba(255,255,255,0.32); line-height: 1.55; }
+
+  .palette-actions { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 3.5rem; }
+  .action-btn { padding: 0.48rem 1.3rem; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.03); font-family: 'Sora'; font-size: 0.5rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.12); cursor: pointer; border-radius: 2px; transition: all 0.3s ease; }
+  .action-btn:hover { color: rgba(255,255,255,0.35); border-color: rgba(255,255,255,0.07); }
+
+  .history-section { display: none; flex-direction: column; align-items: center; }
+  .history-label { font-size: 0.4rem; font-weight: 400; letter-spacing: 0.4em; text-transform: uppercase; color: rgba(255,255,255,0.05); margin-bottom: 1.2rem; }
+  .history-grid { display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+  .history-item { cursor: pointer; opacity: 0.45; transition: all 0.3s ease; }
+  .history-item:hover { opacity: 1; }
+  .history-strip { display: flex; width: 92px; height: 20px; border-radius: 2px; overflow: hidden; margin-bottom: 0.3rem; box-shadow: 0 1px 8px rgba(0,0,0,0.2); }
+  .history-strip div { flex: 1; }
+  .history-feeling { font-family: 'Crimson Pro', serif; font-size: 0.55rem; font-weight: 300; font-style: italic; color: rgba(255,255,255,0.1); text-align: center; max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @media (max-width: 768px) { .palette-strip { height: 180px; } .perceptual-map { grid-template-columns: 1fr; } .nav-label { display: none; } }
+</style>
+</head>
+<body>
+
+<canvas id="aurora"></canvas>
+
+<div class="nav-back">
+  <a href="/" id="backLink">← Arnaud Saint-Pierre</a>
+  <span class="nav-label">Instruments</span>
+  <div class="key-status" id="keyToggle">
+    <div class="key-dot off" id="keyDot"></div>
+    <span id="keyLabel">connect</span>
+  </div>
+</div>
+
+<!-- Key management modal -->
+<div class="key-modal" id="keyModal">
+  <div class="key-modal-inner">
+    <div class="key-modal-title">Engine Status</div>
+    <div class="key-modal-status" id="keyModalStatus">Connected — key stored locally</div>
+    <div class="key-modal-actions">
+      <button class="key-modal-btn" id="keyModalClose">Close</button>
+      <button class="key-modal-btn danger" id="keyModalClear">Clear Key</button>
+    </div>
+  </div>
+</div>
+
+<main class="instrument">
+  <div class="res-hero">
+    <p class="res-label">Instrument 01</p>
+    <h1 class="res-title">Resonance</h1>
+    <p class="res-sub">Describe a feeling. Receive its colors.</p>
+    <p class="res-hint" id="resHint">Try a color below to see what happens.</p>
+  </div>
+
+  <div class="res-input-zone">
+    <div class="res-input-wrap">
+      <input class="res-input" id="feelingInput" type="text" placeholder="the silence after the last guest leaves..." autocomplete="off" spellcheck="false">
+      <button class="res-submit" id="submitBtn">→</button>
+    </div>
+  </div>
+
+  <!-- Key onboarding — shown on first generate if no key -->
+  <div class="key-panel" id="keyPanel">
+    <div class="key-panel-title">Generate anything</div>
+    <div class="key-panel-text">
+      Presets are free. To generate palettes from your own words, connect an Anthropic API key.<br>
+      Free accounts include thousands of generations.<br><br>
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get a free API key →</a> &nbsp;takes 60 seconds
+    </div>
+    <div class="key-input-wrap">
+      <input class="key-input" id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <button class="key-save" id="keySave">Activate</button>
+    </div>
+    <div class="key-panel-note">Your key is encrypted and stored only in your browser. It never touches any server.</div>
+  </div>
+
+  <div class="res-presets">
+    <button class="preset" data-tint="red" data-feel="red">red</button>
+    <button class="preset" data-tint="blue" data-feel="blue">blue</button>
+    <button class="preset" data-tint="green" data-feel="green">green</button>
+    <button class="preset" data-tint="yellow" data-feel="yellow">yellow</button>
+    <button class="preset" data-tint="black" data-feel="black">black</button>
+    <button class="preset" data-tint="white" data-feel="white">white</button>
+    <button class="preset" data-tint="pink" data-feel="pink">pink</button>
+    <button class="preset" data-tint="gold" data-feel="gold">gold</button>
+  </div>
+  <div class="res-presets" style="padding-bottom:3.5rem">
+    <button class="preset feel" data-feel="midnight after rain">midnight after rain</button>
+    <button class="preset feel" data-feel="the moment before a kiss">the moment before a kiss</button>
+    <button class="preset feel" data-feel="controlled anger">controlled anger</button>
+    <button class="preset feel" data-feel="childhood summer">childhood summer</button>
+    <button class="preset feel" data-feel="quiet confidence">quiet confidence</button>
+    <button class="preset feel" data-feel="grief that's become wisdom">grief that's become wisdom</button>
+    <button class="preset feel" data-feel="valentines">valentines</button>
+    <button class="preset feel" data-feel="gentle breeze">gentle breeze</button>
+  </div>
+
+  <div class="res-loading" id="loading"><div class="loading-orb"></div><div class="loading-text">Feeling the resonance...</div></div>
+
+  <div class="res-output" id="output">
+    <div class="palette-strip" id="paletteStrip"></div>
+    <div class="perceptual-map" id="perceptualMap"></div>
+    <div class="palette-actions">
+      <button class="action-btn" id="copyCSSBtn">Copy CSS</button>
+      <button class="action-btn" id="regenBtn">Regenerate</button>
+    </div>
+  </div>
+
+  <div class="history-section" id="historySection">
+    <div class="history-label">Previous</div>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+</main>
+
+<script>
+// ═══════ KEY STORAGE (XOR encryption) ═══════
+var SALT = 'resonance-instrument-01';
+function xorEnc(str) {
+  var out = [];
+  for (var i = 0; i < str.length; i++) {
+    out.push(str.charCodeAt(i) ^ SALT.charCodeAt(i % SALT.length));
+  }
+  return btoa(String.fromCharCode.apply(null, out));
+}
+function xorDec(b64) {
+  try {
+    var raw = atob(b64);
+    var out = [];
+    for (var i = 0; i < raw.length; i++) {
+      out.push(String.fromCharCode(raw.charCodeAt(i) ^ SALT.charCodeAt(i % SALT.length)));
+    }
+    return out.join('');
+  } catch(e) { return null; }
+}
+
+function getKey() {
+  var stored = localStorage.getItem('res_k');
+  if (!stored) return null;
+  return xorDec(stored);
+}
+function saveKey(key) {
+  localStorage.setItem('res_k', xorEnc(key));
+  updateKeyUI();
+}
+function clearKey() {
+  localStorage.removeItem('res_k');
+  updateKeyUI();
+}
+
+function updateKeyUI() {
+  var key = getKey();
+  var dot = document.getElementById('keyDot');
+  var label = document.getElementById('keyLabel');
+  if (key) {
+    dot.className = 'key-dot on';
+    label.textContent = 'connected';
+  } else {
+    dot.className = 'key-dot off';
+    label.textContent = 'connect';
+  }
+}
+updateKeyUI();
+
+// Key panel
+var keyPanelShown = false;
+function showKeyPanel() {
+  var panel = document.getElementById('keyPanel');
+  panel.style.display = 'block';
+  setTimeout(function(){ panel.classList.add('active'); }, 10);
+  keyPanelShown = true;
+}
+function hideKeyPanel() {
+  var panel = document.getElementById('keyPanel');
+  panel.classList.remove('active');
+  setTimeout(function(){ panel.style.display = 'none'; }, 500);
+}
+
+// Key modal (manage)
+document.getElementById('keyToggle').addEventListener('click', function() {
+  var key = getKey();
+  if (key) {
+    document.getElementById('keyModalStatus').textContent = 'Connected — key ending in ...' + key.slice(-6);
+    document.getElementById('keyModal').classList.add('active');
+  } else {
+    showKeyPanel();
+    document.getElementById('keyInput').focus();
+  }
+});
+document.getElementById('keyModalClose').addEventListener('click', function() {
+  document.getElementById('keyModal').classList.remove('active');
+});
+document.getElementById('keyModalClear').addEventListener('click', function() {
+  clearKey();
+  document.getElementById('keyModal').classList.remove('active');
+});
+
+// Save key
+document.getElementById('keySave').addEventListener('click', function() {
+  var val = document.getElementById('keyInput').value.trim();
+  if (val && val.startsWith('sk-')) {
+    saveKey(val);
+    document.getElementById('keyInput').value = '';
+    hideKeyPanel();
+    // If user had tried to generate, do it now
+    if (pendingFeeling) {
+      generatePalette(pendingFeeling);
+      pendingFeeling = null;
+    }
+  }
+});
+document.getElementById('keyInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('keySave').click();
+});
+
+var pendingFeeling = null;
+
+// ═══════ BAKED PRESETS (no API key needed) ═══════
+var BAKED = {
+  'red': ['#C43538','#8B1A1D','#E86B5A','#D4938A','#F2DCD8'],
+  'blue': ['#2B5EA7','#1A3666','#4B8BD4','#7BA3C9','#D0DEF0'],
+  'green': ['#2E8B57','#1A5C35','#5AB88A','#80C9A0','#D0F0E0'],
+  'yellow': ['#D4A017','#8B6914','#E8C44A','#C9B870','#F5EDD0'],
+  'black': ['#1A1A1A','#0A0A0A','#333333','#4A4A4A','#6B6B6B'],
+  'white': ['#F0EDE8','#D8D3CC','#FAF8F5','#E8E4DE','#FFFFFF'],
+  'pink': ['#D4628A','#9B3060','#E890AE','#D4A8B8','#F5DDE6'],
+  'gold': ['#CDA24E','#8B6D22','#E8C878','#D4B880','#F5EED0'],
+  'midnight after rain': ['#1A2744','#0D1628','#2B4070','#4A6080','#8A9BB0'],
+  'the moment before a kiss': ['#C47070','#8B4040','#E8A090','#D4B0A8','#F5E0D8'],
+  'controlled anger': ['#8B2020','#5C0A0A','#B83A3A','#A05050','#C88080'],
+  'childhood summer': ['#E8A840','#B87820','#F0C860','#E0D080','#F8F0C0'],
+  'quiet confidence': ['#3A4A5C','#1E2A38','#5A7088','#7890A0','#B0C0D0'],
+  "grief that's become wisdom": ['#5C5070','#3A2E48','#7A6890','#9888A8','#C8C0D8'],
+  'valentines': ['#D43860','#9B1838','#E86888','#D898A8','#F5D0D8'],
+  'gentle breeze': ['#88B8C8','#5890A0','#A8D0D8','#C0E0E8','#E8F4F8']
+};
+
+// ═══════ FEELING PRESETS (additional baked) ═══════
+
+// ═══════ COLOR MATH ═══════
+var D65={x:.95047,y:1,z:1.08883};
+function hexToRgb(h){h=h.replace('#','');return{r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)}}
+function s2l(c){c/=255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)}
+function rgb2xyz(r,g,b){var R=s2l(r),G=s2l(g),B=s2l(b);return{x:R*.4124564+G*.3575761+B*.1804375,y:R*.2126729+G*.7151522+B*.072175,z:R*.0193339+G*.119192+B*.9503041}}
+function labF(t){return t>.008856?Math.cbrt(t):(903.3*t+16)/116}
+function xyz2lab(x,y,z){var fx=labF(x/D65.x),fy=labF(y/D65.y),fz=labF(z/D65.z);return{L:116*fy-16,a:500*(fx-fy),b:200*(fy-fz)}}
+function lab2lch(L,a,b){var h=Math.atan2(b,a)*180/Math.PI;if(h<0)h+=360;return{L:L,C:Math.sqrt(a*a+b*b),h:h}}
+function hex2lch(hex){var c=hexToRgb(hex);var xyz=rgb2xyz(c.r,c.g,c.b);var lab=xyz2lab(xyz.x,xyz.y,xyz.z);return lab2lch(lab.L,lab.a,lab.b)}
+function makeLab(lch){var rad=lch.h*Math.PI/180;return{L:lch.L,a:lch.C*Math.cos(rad),b:lch.C*Math.sin(rad)}}
+function textCol(hex){var c=hexToRgb(hex);return(.299*c.r+.587*c.g+.114*c.b)/255>.5?'rgba(0,0,0,0.72)':'rgba(255,255,255,0.9)'}
+function hueReg(h){h=((h%360)+360)%360;return h<20||h>=350?'red':h<50?'orange':h<80?'amber':h<110?'yellow-green':h<150?'green':h<180?'teal':h<210?'cyan':h<250?'blue':h<290?'violet':h<330?'magenta':'rose'}
+
+function deltaE00(l1,l2){var L1=l1.L,a1=l1.a,b1=l1.b,L2=l2.L,a2=l2.a,b2=l2.b,C1=Math.sqrt(a1*a1+b1*b1),C2=Math.sqrt(a2*a2+b2*b2),Cb=(C1+C2)/2,G=.5*(1-Math.sqrt(Math.pow(Cb,7)/(Math.pow(Cb,7)+6103515625)));var a1p=a1*(1+G),a2p=a2*(1+G),C1p=Math.sqrt(a1p*a1p+b1*b1),C2p=Math.sqrt(a2p*a2p+b2*b2);var h1p=Math.atan2(b1,a1p)*180/Math.PI,h2p=Math.atan2(b2,a2p)*180/Math.PI;if(h1p<0)h1p+=360;if(h2p<0)h2p+=360;var dhp;if(C1p*C2p===0)dhp=0;else if(Math.abs(h2p-h1p)<=180)dhp=h2p-h1p;else dhp=h2p-h1p>180?h2p-h1p-360:h2p-h1p+360;var dHp=2*Math.sqrt(C1p*C2p)*Math.sin(dhp*Math.PI/360),Lbp=(L1+L2)/2,Cbp=(C1p+C2p)/2;var Hbp;if(C1p*C2p===0)Hbp=h1p+h2p;else Hbp=Math.abs(h1p-h2p)<=180?(h1p+h2p)/2:h1p+h2p<360?(h1p+h2p+360)/2:(h1p+h2p-360)/2;var T=1-.17*Math.cos((Hbp-30)*Math.PI/180)+.24*Math.cos(2*Hbp*Math.PI/180)+.32*Math.cos((3*Hbp+6)*Math.PI/180)-.2*Math.cos((4*Hbp-63)*Math.PI/180),sq=Math.pow(Lbp-50,2),SL=1+.015*sq/Math.sqrt(20+sq),SC=1+.045*Cbp,SH=1+.015*Cbp*T;return Math.sqrt(Math.pow((L2-L1)/SL,2)+Math.pow((C2p-C1p)/SC,2)+Math.pow(dHp/SH,2)+(-2*Math.sqrt(Math.pow(Cbp,7)/(Math.pow(Cbp,7)+6103515625))*Math.sin(60*Math.exp(-Math.pow((Hbp-275)/25,2))*Math.PI/180))*((C2p-C1p)/SC)*(dHp/SH))}
+
+// ═══════ AURORA ═══════
+var auroraCanvas = document.getElementById('aurora');
+var aCtx = auroraCanvas.getContext('2d');
+var aCur = [[6,6,8],[6,6,8],[6,6,8],[6,6,8],[6,6,8]];
+var aTgt = [[6,6,8],[6,6,8],[6,6,8],[6,6,8],[6,6,8]];
+var aT = 0;
+
+function auroraResize() { auroraCanvas.width = window.innerWidth; auroraCanvas.height = window.innerHeight; }
+auroraResize();
+window.addEventListener('resize', auroraResize);
+
+var aBlobs = [
+  {ox:.15,oy:.45,sx:.7,sy:.5,rx:.42,ry:.32,ci:0,a:.35},
+  {ox:.82,oy:.32,sx:.6,sy:.4,rx:.36,ry:.36,ci:3,a:.25},
+  {ox:.48,oy:.78,sx:.8,sy:.3,rx:.45,ry:.25,ci:2,a:.22},
+  {ox:.28,oy:.18,sx:.5,sy:.6,rx:.32,ry:.42,ci:1,a:.18},
+  {ox:.72,oy:.62,sx:.9,sy:.7,rx:.28,ry:.32,ci:4,a:.15}
+];
+
+function drawAurora() {
+  aT += 0.003;
+  var w = auroraCanvas.width, h = auroraCanvas.height;
+  aCtx.clearRect(0, 0, w, h);
+  for (var i = 0; i < 5; i++) for (var j = 0; j < 3; j++) aCur[i][j] += (aTgt[i][j] - aCur[i][j]) * 0.025;
+  aBlobs.forEach(function(b) {
+    var bx = (b.ox + Math.sin(aT * b.sx) * 0.18) * w;
+    var by = (b.oy + Math.cos(aT * b.sy) * 0.2) * h;
+    var rad = Math.max(b.rx * w, b.ry * h);
+    var c = aCur[b.ci];
+    var grd = aCtx.createRadialGradient(bx, by, 0, bx, by, rad);
+    grd.addColorStop(0, 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+b.a+')');
+    grd.addColorStop(0.5, 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(b.a*.25)+')');
+    grd.addColorStop(1, 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+',0)');
+    aCtx.fillStyle = grd;
+    aCtx.fillRect(0, 0, w, h);
+  });
+  requestAnimationFrame(drawAurora);
+}
+drawAurora();
+
+function setAuroraColors(hexes) {
+  aTgt = hexes.map(function(hex) { var c = hexToRgb(hex); return [c.r, c.g, c.b]; });
+}
+
+// ═══════ ENGINE ═══════
+var SYS = 'You are a perceptual color engineer. Map human inputs to 5-color palettes using color psychology.\nROLES: 1.ANCHOR(dominant feeling) 2.DEPTH(darker,richer,same family) 3.BREATH(bridge,slight hue shift) 4.ACCENT(analogous tension 20-45 degrees) 5.WHISPER(pale,desaturated echo)\nRULES: All 5 cohesive. Color names stay in family. Emotions use psychology. Designer quality. Dribbble-worthy.\nONLY return JSON array of 5 hex strings. Nothing else. Example:["#C43538","#8B1A1D","#E86B5A","#D4938A","#F2DCD8"]';
+
+var ROLES = ['Anchor','Depth','Breath','Accent','Whisper'];
+var currentPalette = null, currentFeeling = "", paletteHistory = [];
+
+function generatePalette(overrideFeeling) {
+  var input = document.getElementById('feelingInput');
+  var feeling = overrideFeeling || input.value.trim();
+  if (!feeling) return;
+
+  var feelingLower = feeling.toLowerCase().trim();
+  currentFeeling = feeling;
+  input.value = feeling;
+  if (keyPanelShown) hideKeyPanel();
+
+  // Check baked presets first — no key needed
+  if (BAKED[feelingLower]) {
+    document.getElementById('output').classList.remove('active');
+    document.getElementById('loading').classList.add('active');
+    // Tiny delay for the loading feel
+    setTimeout(function() { renderPalette(BAKED[feelingLower], feeling); }, 400);
+    return;
+  }
+
+  // Custom input — needs API key
+  var apiKey = getKey();
+  if (!apiKey) {
+    pendingFeeling = feeling;
+    showKeyPanel();
+    document.getElementById('keyInput').focus();
+    return;
+  }
+
+  document.getElementById('output').classList.remove('active');
+  document.getElementById('loading').classList.add('active');
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{role:'user', content: SYS + '\n\nGenerate a 5-color palette for: "' + feeling + '"'}]
+    })
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  })
+  .then(function(data) {
+    var text = data.content.map(function(b){return b.text||''}).join('').trim();
+    var match = text.match(/\[.*\]/s);
+    if (!match) throw new Error('no array');
+    var hexes = JSON.parse(match[0]);
+    if (hexes.length !== 5 || !hexes.every(function(h){return /^#[0-9A-Fa-f]{6}$/.test(h)})) throw new Error('bad');
+    renderPalette(hexes, feeling);
+  })
+  .catch(function(e) {
+    console.error('API error:', e);
+    if (e.message === '401' || e.message === '403') {
+      clearKey();
+      pendingFeeling = feeling;
+      showKeyPanel();
+      document.getElementById('loading').classList.remove('active');
+      return;
+    }
+    renderPalette(['#6B7280','#374151','#9CA3AF','#4B5563','#D1D5DB'], feeling);
+  });
+}
+
+function renderPalette(hexes, feeling) {
+  var colors = hexes.map(function(hex, i) {
+    var lch = hex2lch(hex);
+    var lab = makeLab(lch);
+    return {L:lch.L, C:lch.C, h:lch.h, lab:lab, hex:hex.toUpperCase(), role:ROLES[i]};
+  });
+
+  currentPalette = colors;
+  setAuroraColors(hexes);
+
+  var strip = document.getElementById('paletteStrip');
+  strip.innerHTML = '';
+  colors.forEach(function(c, i) {
+    var s = document.createElement('div');
+    s.className = 'swatch';
+    s.style.background = c.hex;
+    s.style.color = textCol(c.hex);
+    var de = i === 0 ? 0 : deltaE00(colors[0].lab, c.lab);
+    s.innerHTML = '<div class="swatch-info"><div class="swatch-hex">'+c.hex+'</div><div class="swatch-role">'+c.role+'</div><div class="swatch-de">'+(i===0?'L*'+c.L.toFixed(0)+' C*'+c.C.toFixed(0):'ΔE '+de.toFixed(1))+'</div></div><div class="swatch-copied">Copied</div>';
+    s.addEventListener('click', function(){navigator.clipboard.writeText(c.hex);s.classList.add('copied');setTimeout(function(){s.classList.remove('copied')},1200)});
+    strip.appendChild(s);
+  });
+
+  var avgC = colors.reduce(function(s,c){return s+c.C},0)/5;
+  var de03 = deltaE00(colors[0].lab, colors[3].lab);
+  var lSpan = Math.abs(colors[1].L - colors[4].L);
+  var hD = Math.abs(colors[0].h - colors[3].h);
+  var hSpread = Math.min(hD, 360-hD);
+
+  document.getElementById('perceptualMap').innerHTML =
+    '<div class="map-card"><div class="map-label">Arousal</div><div class="map-value">Chroma '+avgC.toFixed(0)+'. '+(avgC>50?'Sympathetic activation.':avgC>30?'Engaged. Present.':avgC>15?'Parasympathetic. Still.':'Achromatic. Absence.')+'</div></div>'+
+    '<div class="map-card"><div class="map-label">Anchor</div><div class="map-value">L*'+colors[0].L.toFixed(0)+' C*'+colors[0].C.toFixed(0)+' h\u00B0'+colors[0].h.toFixed(0)+' \u2014 '+hueReg(colors[0].h)+'. '+(colors[0].L>60?'High key.':colors[0].L>35?'Grounded.':'Gravity.')+'</div></div>'+
+    '<div class="map-card"><div class="map-label">Tension</div><div class="map-value">\u0394E*\u2080\u2080 '+de03.toFixed(1)+'. '+(de03>40?'Visual system stays alert.':de03>25?'Movement without dissonance.':de03>12?'Tonal drift.':'Meditative.')+'</div></div>'+
+    '<div class="map-card"><div class="map-label">Dimension</div><div class="map-value">'+lSpan.toFixed(0)+' L* across '+hSpread.toFixed(0)+'\u00B0 hue. '+(lSpan>50?'Cinematic.':lSpan>30?'Light and shadow.':lSpan>15?'Atmospheric.':'Graphic.')+'</div></div>';
+
+  document.getElementById('loading').classList.remove('active');
+  document.getElementById('output').classList.add('active');
+
+  // Fade the onboarding hint after first use
+  var hint = document.getElementById('resHint');
+  if (hint) { hint.style.opacity = '0'; setTimeout(function(){ hint.style.display = 'none'; }, 1500); }
+
+  paletteHistory.push({feeling:feeling, colors:hexes.map(function(h){return h.toUpperCase()})});
+  renderHistory();
+}
+
+function renderHistory() {
+  if (paletteHistory.length <= 1) return;
+  var section = document.getElementById('historySection');
+  var grid = document.getElementById('historyGrid');
+  section.style.display = 'flex';
+  grid.innerHTML = '';
+  paletteHistory.slice(0,-1).reverse().slice(0,7).forEach(function(item) {
+    var el = document.createElement('div');
+    el.className = 'history-item';
+    el.innerHTML = '<div class="history-strip">'+item.colors.map(function(c){return '<div style="background:'+c+'"></div>'}).join('')+'</div><div class="history-feeling">'+item.feeling+'</div>';
+    el.addEventListener('click', function(){document.getElementById('feelingInput').value=item.feeling;generatePalette()});
+    grid.appendChild(el);
+  });
+}
+
+// ═══════ EVENT LISTENERS ═══════
+document.getElementById('feelingInput').addEventListener('keydown', function(e){ if (e.key==='Enter') generatePalette(); });
+document.getElementById('submitBtn').addEventListener('click', function(){ generatePalette(); });
+document.getElementById('copyCSSBtn').addEventListener('click', function(){ if (!currentPalette) return; navigator.clipboard.writeText(':root {\n'+currentPalette.map(function(c){return '  --'+c.role.toLowerCase()+': '+c.hex+';'}).join('\n')+'\n}'); });
+document.getElementById('regenBtn').addEventListener('click', function(){ if (currentFeeling) generatePalette(); });
+document.querySelectorAll('.preset[data-feel]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.getElementById('feelingInput').value = btn.getAttribute('data-feel');
+    generatePalette();
+  });
+});
+</script>
+</body>
+</html>
