@@ -560,18 +560,11 @@ function generatePalette(overrideFeeling) {
   })
   .catch(function(e) {
     console.error('Resonance API error:', e.message);
-    if (e.message === '401' || e.message === '403') {
-      clearKey();
-      pendingFeeling = feeling;
-      showKeyPanel();
-      document.getElementById('loading').classList.remove('active');
-      return;
-    }
-    // Show error state instead of grey fallback
+    clearKey();
+    pendingFeeling = feeling;
     document.getElementById('loading').classList.remove('active');
-    var errEl = document.getElementById('output');
-    errEl.classList.add('active');
-    document.getElementById('paletteStrip').innerHTML = '<div style="text-align:center;padding:2rem;font-family:IBM Plex Mono,monospace;font-size:.5rem;color:rgba(255,255,255,0.4);letter-spacing:.08em">Generation failed. Check your API key and try again.</div>';
+    showKeyPanel();
+    document.getElementById('keyInput').focus();
   });
 }
 
