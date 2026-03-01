@@ -535,7 +535,7 @@ function generatePalette(overrideFeeling) {
       'anthropic-dangerous-direct-browser-access': 'true'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-5',
       max_tokens: 300,
       messages: [{role:'user', content: SYS + '\n\nGenerate a 5-color palette for: "' + feeling + '"'}]
     })
