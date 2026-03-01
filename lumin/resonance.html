@@ -535,7 +535,7 @@ function generatePalette(overrideFeeling) {
       'anthropic-dangerous-direct-browser-access': 'true'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 300,
       messages: [{role:'user', content: SYS + '\n\nGenerate a 5-color palette for: "' + feeling + '"'}]
     })
@@ -543,7 +543,7 @@ function generatePalette(overrideFeeling) {
   .then(function(res) {
     if (!res.ok) {
       return res.json().then(function(body) {
-        console.error('API response:', res.status, body);
+        console.error('API response:', res.status, JSON.stringify(body, null, 2));
         throw new Error(String(res.status));
       });
     }
