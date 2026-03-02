@@ -419,7 +419,7 @@
         <!-- AXIOM MK-II -->
         <div class="axiom r">
             <div class="axiom-head">
-                <div class="axiom-info"><div class="pn">001 / LIVE SYSTEM</div><div class="pname">Axiom MK-II</div><div class="psub">Momentum Scanner</div><div class="pdesc">A system I built to find the exact moment a stock is about to move. Backtested across 14 trading days. Every entry documented.</div></div>
+                <div class="axiom-info"><div class="pn">001 / LIVE SYSTEM</div><div class="pname">Axiom MK-II</div><div class="psub">Momentum Scanner</div><div class="pdesc">A system I built to find the exact moment a stock is about to move. Executed across 14 trading days. Every entry documented.</div></div>
                 <div class="axiom-stats">
                     <div class="ax-stat"><div class="ax-v gold">$11,613</div><div class="ax-l">From $1,000 Start</div></div>
                     <div class="ax-stat"><div class="ax-v green">91.3%</div><div class="ax-l">Win Rate (21/23)</div></div>
@@ -427,13 +427,13 @@
                 </div>
             </div>
             <div style="padding:1.5rem 2.5rem"><div class="pdesc">Best signal: KWM — deep washout, clean reclaim, +28.8% to impulse high.</div></div>
-            <div class="axiom-foot"><div class="axiom-foot-l">BUILT FROM SCRATCH · 14 TRADING DAYS DOCUMENTED</div><div class="pt"><span>Python</span><span>TradingView</span><span>Pine Script</span><span>Statistical Analysis</span></div></div>
+            <div class="axiom-foot"><div class="axiom-foot-l"></div><div class="pt"><span>Python</span><span>TradingView</span><span>Pine Script</span><span>Statistical Analysis</span></div></div>
         </div>
 
         <!-- PATHFINDER — A* ALGORITHM VISUALIZER -->
         <div class="path-wrap r">
             <div class="path-header">
-                <div class="path-info"><div><div class="path-title">Pathfinder</div><div class="path-sub">A* Search Algorithm · Live Visualization</div></div></div>
+                <div class="path-info"><div><div class="path-title">Pathfinder</div><div class="path-sub">A* Search · Draw walls, find paths</div></div></div>
                 <div class="path-controls">
                     <div class="path-hint" id="pathHint">Draw walls → Hit Run</div>
                     <button class="path-btn" id="pathRun">Run A*</button>
@@ -453,8 +453,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;cursor:pointer;border:1px solid var(--br);border-radius:.5rem;background:var(--sf);transition:border-color .3s,background .3s" onmouseover="this.style.borderColor='rgba(205,162,78,.2)';this.style.background='var(--sf2)'" onmouseout="this.style.borderColor='var(--br)';this.style.background='var(--sf)'" onclick="const t=document.getElementById('playgroundContent');const a=document.getElementById('playgroundArrow');if(t.style.display==='none'){t.style.display='flex';a.textContent='▾';if(typeof reinitPhysics==='function')reinitPhysics();if(typeof resPathfinder==='function')setTimeout(function(){resPathfinder();initGrid()},100)}else{t.style.display='none';a.textContent='▸'}">
                 <div style="display:flex;align-items:center;gap:1rem">
                     <span style="font-family:var(--mono);font-size:.52rem;letter-spacing:.2em;color:var(--txd)">ALSO</span>
-                    <span style="font-family:var(--disp);font-size:1.1rem;color:var(--txd)">Playground</span>
-                    <span style="font-family:var(--mono);font-size:.5rem;color:var(--txd);letter-spacing:.1em">Interactive demos & experiments</span>
+                    <span style="font-family:var(--disp);font-size:1.1rem;color:var(--txd)">More things you can touch</span>
                 </div>
                 <span id="playgroundArrow" style="font-family:var(--mono);font-size:.8rem;color:var(--txm);transition:transform .3s">▸</span>
             </div>
@@ -469,7 +468,7 @@
                 </div>
                 <!-- GRAVITY LAB -->
                 <div class="physics-wrap r">
-                    <div class="physics-header"><div><div class="physics-title">Gravity Lab</div><div class="physics-sub">N-Body Simulation</div></div><div class="physics-hint">Click to spawn · Hold to attract</div></div>
+                    <div class="physics-header"><div><div class="physics-title">Gravity Lab</div><div class="physics-sub">N-Body Gravity</div></div><div class="physics-hint">Click to spawn · Hold to attract</div></div>
                     <canvas id="physCanvas"></canvas>
                 </div>
             </div>
