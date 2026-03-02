@@ -387,6 +387,24 @@
         .r.v{opacity:1;transform:translateY(0)}
         .toge-inner .r{transition:opacity .65s cubic-bezier(.22,.68,0,1.04),transform .65s cubic-bezier(.22,.68,0,1.04)}
 
+        /* VOID ZONE */
+        .void-zone{position:relative;width:100%;overflow:hidden}
+        .void-fade-in{height:20vh;background:linear-gradient(to bottom,var(--bg),#F0EFED);position:relative}
+        .void-fade-out{height:20vh;background:linear-gradient(to bottom,#F0EFED,#030304);position:relative}
+        .void-container{position:relative;width:100%;height:100vh;background:#F0EFED;cursor:none;overflow:hidden}
+        #voidCanvas{position:absolute;top:0;left:0;width:100%;height:100%}
+        .void-cursor{position:fixed;width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,0.12);pointer-events:none;z-index:10;transform:translate(-50%,-50%);mix-blend-mode:multiply;transition:width .2s cubic-bezier(.2,.8,.2,1),height .2s cubic-bezier(.2,.8,.2,1),background .2s;opacity:0}
+        .void-container:hover .void-cursor,.void-container:active .void-cursor{opacity:1}
+        body.zone-void #glow{opacity:0 !important;transition:opacity .6s ease}
+        .void-intro{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5;transition:opacity 2s ease}
+        .void-intro.hidden{opacity:0}
+        .void-intro>div{display:flex;flex-direction:column;align-items:center;gap:18px}
+        .void-intro-text{font-family:var(--mono);font-size:.56rem;color:rgba(0,0,0,0.2);letter-spacing:.15em;text-transform:lowercase;animation:vBreathe 3.5s ease-in-out infinite}
+        .void-intro-sub{font-family:var(--mono);font-size:.46rem;color:rgba(0,0,0,0.09);letter-spacing:.1em}
+        .void-intro-pulse{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.08);animation:vPulse 2.5s ease-in-out infinite}
+        @keyframes vBreathe{0%,100%{opacity:.35}50%{opacity:1}}
+        @keyframes vPulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.4);opacity:.12}}
+
         @media(max-width:900px){
             .hero-c{padding:8rem 1.5rem 4rem}.h-meta{flex-direction:column;gap:1.5rem}nav{padding:1rem 1.5rem}.n-links{display:none}.sec{padding:6rem 1.5rem}
             .e-item{grid-template-columns:1fr;gap:.5rem;margin:0;padding:2rem 0}.axiom-head{flex-direction:column;gap:1.5rem}.axiom-stats{text-align:left}
@@ -394,6 +412,8 @@
             .signal-core{padding:6rem 1.5rem}.toge-core{padding:6rem 1.5rem}.t-stats{flex-direction:column;gap:2rem}
             .contact{padding:8rem 1.5rem}.cls{flex-direction:column;align-items:center}
             footer{flex-direction:column;gap:1rem;text-align:center}.h-scroll,.hud{display:none}
+            .void-container{height:70vh}
+            .void-fade-in,.void-fade-out{height:12vh}
         }
 
         /* THE FREQUENCY */
@@ -580,6 +600,21 @@
     </div>
 </section>
 
+<!-- VOID — Interactive Particle Experience -->
+<div class="void-zone" id="voidZone">
+    <div class="void-fade-in"></div>
+    <div class="void-container" id="voidContainer">
+        <canvas id="voidCanvas"></canvas>
+        <div class="void-cursor" id="voidCursor"></div>
+        <div class="void-intro" id="voidIntro">
+            <div class="void-intro-text">hold to gather · release to detonate</div>
+            <div class="void-intro-sub">5 things to discover</div>
+            <div class="void-intro-pulse"></div>
+        </div>
+    </div>
+    <div class="void-fade-out"></div>
+</div>
+
 <div class="signal" id="signal">
     <div class="signal-trans"></div>
     <div class="signal-core">
@@ -726,9 +761,9 @@ function uh(){hudT.textContent=new Date().toISOString().slice(0,19).replace('T',
 
 // ZONES
 const hudS=document.getElementById('hudSection');
-const secs={hero:'SECTION 00 / OVERVIEW',exp:'SECTION 01 / EXPERIENCE',work:'SECTION 02 / PROJECTS',signal:'SECTION 03 / SIGNAL',toge:'TŌGE',freq:'SECTION 04 / FREQUENCY',contact:'SECTION 05 / CONNECT'};
-const zo=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const id=e.target.id;if(secs[id])hudS.textContent=secs[id];document.body.classList.remove('zone-toge','zone-signal','zone-contact');if(id==='toge')document.body.classList.add('zone-toge');if(id==='signal')document.body.classList.add('zone-signal');if(id==='contact')document.body.classList.add('zone-contact')}})},{threshold:.15});
-['hero','exp','work','signal','toge','freq','contact'].forEach(id=>{const el=document.getElementById(id);if(el)zo.observe(el)});
+const secs={hero:'SECTION 00 / OVERVIEW',exp:'SECTION 01 / EXPERIENCE',work:'SECTION 02 / PROJECTS',voidZone:'',signal:'SECTION 03 / SIGNAL',toge:'TŌGE',freq:'SECTION 04 / FREQUENCY',contact:'SECTION 05 / CONNECT'};
+const zo=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const id=e.target.id;if(secs[id]!==undefined)hudS.textContent=secs[id];document.body.classList.remove('zone-toge','zone-signal','zone-contact','zone-void');if(id==='toge')document.body.classList.add('zone-toge');if(id==='signal')document.body.classList.add('zone-signal');if(id==='contact')document.body.classList.add('zone-contact');if(id==='voidZone')document.body.classList.add('zone-void')}})},{threshold:.15});
+['hero','exp','work','voidZone','signal','toge','freq','contact'].forEach(id=>{const el=document.getElementById(id);if(el)zo.observe(el)});
 
 // HERO CANVAS
 const hc=document.getElementById('heroCanvas'),hx=hc.getContext('2d');
