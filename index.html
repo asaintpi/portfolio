@@ -202,7 +202,8 @@
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
         .toge-core{background:#080505;padding:10rem 3rem;position:relative}
-        .toge-core::after{content:'';position:absolute;inset:0;z-index:1;background:url('img/toge_backdrop.png') center center/cover no-repeat;opacity:0.06;mix-blend-mode:lighten;pointer-events:none;mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%)}
+        .toge-core::after{content:'';position:absolute;inset:0;z-index:1;background:url('img/toge_backdrop.png') center center/cover no-repeat;opacity:0.06;mix-blend-mode:lighten;pointer-events:none;mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%);transition:opacity 2s ease}
+        .toge-core.backdrop-reveal::after{opacity:0.09}
         #togeCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.5}
         .toge-vig{position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 50% 50%,transparent,rgba(8,5,5,.7));pointer-events:none;z-index:1}
         .toge-inner{max-width:1200px;margin:0 auto;position:relative;z-index:2}
@@ -658,7 +659,7 @@ requestAnimationFrame(drawT)}drawT();
 const ve=document.getElementById('voidText');const vq='Ghosts can choose\nto become real.';let vt=false;
 const vo=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!vt){vt=true;ve.classList.add('active');typeV(vq,0)}})},{threshold:.4});
 vo.observe(document.getElementById('togeVoid'));
-function typeV(s,i){if(i<=s.length){ve.innerHTML=s.slice(0,i).replace(/\n/g,'<br>')+'<span class="void-cursor"></span>';setTimeout(()=>typeV(s,i+1),s[i]==='\n'?400:65+Math.random()*40)}else ve.innerHTML=s.replace(/\n/g,'<br>')}
+function typeV(s,i){if(i<=s.length){ve.innerHTML=s.slice(0,i).replace(/\n/g,'<br>')+'<span class="void-cursor"></span>';setTimeout(()=>typeV(s,i+1),s[i]==='\n'?400:65+Math.random()*40)}else{ve.innerHTML=s.replace(/\n/g,'<br>');document.querySelector('.toge-core').classList.add('backdrop-reveal')}}
 
 // PATHFINDER — A* ALGORITHM VISUALIZER
 const pfc=document.getElementById('pathCanvas'),pfx=pfc.getContext('2d');
