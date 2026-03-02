@@ -140,31 +140,17 @@
         .pt span{font-family:var(--mono);font-size:.52rem;letter-spacing:.05em;padding:.22rem .45rem;background:var(--gold-ll);border:1px solid rgba(205,162,78,.08);border-radius:3px;color:var(--gold)}
 
         /* SYNTAX ERROR */
-        .game-wrap{background:#0a0a0a;border:1px solid var(--br);border-radius:.6rem;overflow:hidden}
-        .game-header{padding:1.2rem 2rem;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center}
-        .game-title-area{display:flex;align-items:center;gap:1rem}
-        .game-icon{font-size:1.1rem}
-        .game-title{font-family:var(--disp);font-size:1rem;color:var(--tx)}
-        .game-sub{font-family:var(--mono);font-size:.5rem;color:var(--txd);letter-spacing:.1em}
-        .game-score-area{font-family:var(--mono);font-size:.52rem;color:var(--gold);letter-spacing:.1em}
-        #gameTerminal{padding:1.75rem 2rem;min-height:260px;font-family:var(--mono)}
-        .game-start{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:1.25rem;text-align:center}
-        .game-start-title{font-family:var(--disp);font-size:1.3rem;color:var(--tx)}
-        .game-start-sub{font-family:var(--mono);font-size:.55rem;color:var(--txd);letter-spacing:.08em;max-width:380px;line-height:1.8}
-        .game-btn{font-family:var(--mono);font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.8rem;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:100px;cursor:pointer;transition:all .3s}
-        .game-btn:hover{background:var(--gold);color:var(--bg)}
-        .term-code{background:#080808;border:1px solid var(--br);border-radius:4px;padding:1.25rem 1.25rem 1.25rem 3rem;margin-bottom:1.25rem;position:relative}
-        .term-ln-nums{position:absolute;left:.75rem;top:1.25rem;font-size:.7rem;line-height:2;color:var(--txm);user-select:none}
-        .term-code pre{font-family:var(--mono);font-size:.72rem;line-height:2;color:var(--txd);white-space:pre-wrap}
-        .term-code .err{color:var(--crim);text-decoration:wavy underline;text-decoration-color:var(--crim);cursor:pointer;border-radius:2px;padding:1px 3px;margin:0 -3px;transition:background .2s}
-        .term-code .err:hover{background:rgba(184,58,58,.12)}
-        .term-hint{font-size:.55rem;color:var(--txm);margin-bottom:1rem}
-        #gameInput{background:#080808;border:1px solid var(--br);border-radius:4px;padding:.65rem .9rem;font-family:var(--mono);font-size:.72rem;color:var(--tx);width:100%;max-width:380px;outline:none;transition:border-color .3s}
-        #gameInput:focus{border-color:var(--gold)}
-        #gameInput::placeholder{color:var(--txm)}
-        .game-status{font-family:var(--mono);font-size:.52rem;margin-top:.8rem;min-height:1.4rem}
-        .game-status.correct{color:var(--green)}
-        .game-status.wrong{color:var(--crim)}
+        .proj-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2rem}
+        .game-card{background:#0a0a0a;border:1px solid var(--br);border-radius:.6rem;overflow:hidden;transition:border-color .4s cubic-bezier(.16,1,.3,1)}
+        .game-card:hover{border-color:rgba(205,162,78,.15)}
+        .game-card-header{padding:1.2rem 2rem;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:1rem}
+        .game-card-icon{font-size:1.1rem}
+        .game-card-title{font-family:var(--disp);font-size:1rem;color:var(--tx)}
+        .game-card-sub{font-family:var(--mono);font-size:.5rem;color:var(--txd);letter-spacing:.1em}
+        .game-card-body{padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+        .game-card-desc{font-family:var(--mono);font-size:.55rem;color:var(--txd);line-height:1.8;letter-spacing:.04em}
+        .game-card-arrow{font-size:1.2rem;color:var(--txm);transition:color .3s,transform .3s}
+        .game-card:hover .game-card-arrow{color:var(--gold);transform:translateX(4px)}
 
         /* PATHFINDER */
         .path-wrap{background:#0a0a0a;border:1px solid var(--br);border-radius:.6rem;overflow:hidden}
@@ -311,6 +297,7 @@
         @media(max-width:900px){
             .hero-c{padding:8rem 1.5rem 4rem}.h-meta{flex-direction:column;gap:1.5rem}nav{padding:1rem 1.5rem}.n-links{display:none}.sec{padding:6rem 1.5rem}
             .e-item{grid-template-columns:1fr;gap:.5rem;margin:0;padding:2rem 0}.axiom-head{flex-direction:column;gap:1.5rem}.axiom-stats{text-align:left}
+            .proj-grid{grid-template-columns:1fr}
             .signal-core{padding:6rem 1.5rem}.toge-core{padding:6rem 1.5rem}.t-stats{flex-direction:column;gap:2rem}
             .contact{padding:8rem 1.5rem}.cls{flex-direction:column;align-items:center}
             footer{flex-direction:column;gap:1rem;text-align:center}.h-scroll,.hud{display:none}
@@ -434,47 +421,31 @@
             <div class="axiom-foot"><div class="axiom-foot-l"></div><div class="pt"><span>Python</span><span>TradingView</span><span>Pine Script</span><span>Statistical Analysis</span></div></div>
         </div>
 
-        <!-- PATHFINDER — A* ALGORITHM VISUALIZER -->
-        <div class="path-wrap r">
-            <div class="path-header">
-                <div class="path-info"><div><div class="path-title">Pathfinder</div><div class="path-sub">A* Search · Draw walls, find paths</div></div></div>
-                <div class="path-controls">
-                    <div class="path-hint" id="pathHint">Draw walls → Hit Run</div>
-                    <button class="path-btn" id="pathRun">Run A*</button>
-                    <button class="path-btn" id="pathClear">Clear</button>
-                </div>
-            </div>
-            <canvas id="pathCanvas"></canvas>
-            <div class="path-footer">
-                <div class="path-stat">Nodes explored: <b id="pathExplored">0</b></div>
-                <div class="path-stat">Path length: <b id="pathLength">—</b></div>
-                <div class="path-stat">Algorithm: <b>A* with Manhattan heuristic</b></div>
-            </div>
-        </div>
-
-        <!-- PLAYGROUND -->
-        <div class="r" style="margin-top:1rem">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;cursor:pointer;border:1px solid var(--br);border-radius:.5rem;background:var(--sf);transition:border-color .3s,background .3s" onmouseover="this.style.borderColor='rgba(205,162,78,.2)';this.style.background='var(--sf2)'" onmouseout="this.style.borderColor='var(--br)';this.style.background='var(--sf)'" onclick="const t=document.getElementById('playgroundContent');const a=document.getElementById('playgroundArrow');if(t.style.display==='none'){t.style.display='flex';a.textContent='▾';if(typeof reinitPhysics==='function')reinitPhysics();if(typeof resPathfinder==='function')setTimeout(function(){resPathfinder();initGrid()},100)}else{t.style.display='none';a.textContent='▸'}">
-                <div style="display:flex;align-items:center;gap:1rem">
-                    <span style="font-family:var(--mono);font-size:.52rem;letter-spacing:.2em;color:var(--txd)">ALSO</span>
-                    <span style="font-family:var(--disp);font-size:1.1rem;color:var(--txd)">More things you can touch</span>
-                </div>
-                <span id="playgroundArrow" style="font-family:var(--mono);font-size:.8rem;color:var(--txm);transition:transform .3s">▸</span>
-            </div>
-            <div id="playgroundContent" style="display:none;flex-direction:column;gap:1.5rem">
-                <!-- SYNTAX ERROR -->
-                <div class="game-wrap r">
-                    <div class="game-header"><div class="game-title-area"><span class="game-icon">⌨</span><div><div class="game-title">Syntax Error</div><div class="game-sub">Find the bug. Fix it. Score points.</div></div></div><div class="game-score-area">SCORE: <span id="gameScore">0</span></div></div>
-                    <div id="gameTerminal">
-                        <div class="game-start" id="gameStart"><div class="game-start-title">Syntax Error</div><div class="game-start-sub">A retro debugging game. Spot the Python bug.<br/>Type the corrected line. Hit enter.</div><button class="game-btn" id="gameStartBtn">Start Game</button></div>
-                        <div id="gamePlay" style="display:none"><div class="term-hint" id="gamePrompt"></div><div class="term-code"><div class="term-ln-nums" id="gameLn"></div><pre id="gameCode"></pre></div><div class="term-hint" id="gameHint"></div><input type="text" id="gameInput" placeholder="Type the corrected line..." autocomplete="off" spellcheck="false"/><div class="game-status" id="gameStatus"></div></div>
+        <!-- PATHFINDER + SYNTAX ERROR + GRAVITY LAB -->
+        <div class="proj-grid r">
+            <div class="path-wrap">
+                <div class="path-header">
+                    <div class="path-info"><div><div class="path-title">Pathfinder</div><div class="path-sub">A* Search · Draw walls, find paths</div></div></div>
+                    <div class="path-controls">
+                        <div class="path-hint" id="pathHint">Draw walls → Hit Run</div>
+                        <button class="path-btn" id="pathRun">Run A*</button>
+                        <button class="path-btn" id="pathClear">Clear</button>
                     </div>
                 </div>
-                <!-- GRAVITY LAB -->
-                <div class="physics-wrap r">
-                    <div class="physics-header"><div><div class="physics-title">Gravity Lab</div><div class="physics-sub">N-Body Gravity</div></div><div class="physics-hint">Click to spawn · Hold to attract</div></div>
-                    <canvas id="physCanvas"></canvas>
+                <canvas id="pathCanvas"></canvas>
+                <div class="path-footer">
+                    <div class="path-stat">Nodes explored: <b id="pathExplored">0</b></div>
+                    <div class="path-stat">Path length: <b id="pathLength">—</b></div>
+                    <div class="path-stat">Algorithm: <b>A* with Manhattan heuristic</b></div>
                 </div>
+            </div>
+            <a href="arcade/syntax-error.html" class="game-card" style="text-decoration:none;display:block">
+                <div class="game-card-header"><span class="game-card-icon">⌨</span><div><div class="game-card-title">Syntax Error</div><div class="game-card-sub">Find the bug. Fix it. Score points.</div></div></div>
+                <div class="game-card-body"><div class="game-card-desc">A retro debugging game. Spot the Python bug. Type the corrected line.</div><span class="game-card-arrow">→</span></div>
+            </a>
+            <div class="physics-wrap">
+                <div class="physics-header"><div><div class="physics-title">Gravity Lab</div><div class="physics-sub">N-Body Gravity</div></div><div class="physics-hint">Click to spawn · Hold to attract</div></div>
+                <canvas id="physCanvas"></canvas>
             </div>
         </div>
 
@@ -874,37 +845,6 @@ function reinitPhysics(){
     },100);
 }
 window.reinitPhysics=reinitPhysics;
-
-// SYNTAX ERROR - PYTHON
-const challenges=[
-    {code:'def greet(name):\n    print("Hello " + Name)\n    return True',error:'Name',fix:'name',hint:'Python is case-sensitive. Variables must match exactly.'},
-    {code:'numbers = [1, 2, 3, 4, 5]\ntotal = numbers.sum()\nprint(total)',error:'numbers.sum()',fix:'sum(numbers)',hint:'Lists don\'t have a .sum() method. Use the built-in.'},
-    {code:'def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n)',error:'factorial(n)',fix:'factorial(n - 1)',hint:'Recursion without reduction = infinite loop.'},
-    {code:'user = {"name": "Arnaud"}\nage = user["age"]\nprint(age)',error:'user["age"]',fix:'user.get("age")',hint:'Accessing missing key raises KeyError. Use .get() for safety.'},
-    {code:'fruits = ["apple", "banana"]\nif fruits.length > 0:\n    print(fruits[0])',error:'fruits.length',fix:'len(fruits)',hint:'Python uses len(), not .length'},
-    {code:'x = 10\nif x = 10:\n    print("ten")',error:'x = 10:',fix:'x == 10:',hint:'Single = is assignment. Double == is comparison.'},
-    {code:'data = [3, 1, 4, 1, 5]\ndata.sort(reversed=True)\nprint(data)',error:'reversed=True',fix:'reverse=True',hint:'The parameter is reverse, not reversed.'},
-    {code:'name = "Arnaud"\ngreeting = "Hello " + name + " you are " + 25\nprint(greeting)',error:'+ 25',fix:'+ str(25)',hint:'Can\'t concatenate str and int. Cast it.'}
-];
-
-let gameActive=false,score=0,cc=null;
-const gs=document.getElementById('gameStart'),gp=document.getElementById('gamePlay'),gi=document.getElementById('gameInput'),
-gc=document.getElementById('gameCode'),gh=document.getElementById('gameHint'),gst=document.getElementById('gameStatus'),
-gln=document.getElementById('gameLn'),gpr=document.getElementById('gamePrompt'),se=document.getElementById('gameScore');
-document.getElementById('gameStartBtn').addEventListener('click',()=>{gameActive=true;score=0;se.textContent='0';gs.style.display='none';gp.style.display='block';nextC()});
-
-function nextC(){
-    cc=challenges[Math.floor(Math.random()*challenges.length)];
-    const lines=cc.code.split('\n');
-    gln.innerHTML=lines.map((_,i)=>`<div style="line-height:2;font-size:.7rem">${i+1}</div>`).join('');
-    const hl=cc.code.replace(cc.error,`<span class="err">${cc.error}</span>`);
-    gc.innerHTML=`<div class="term-ln-nums">${gln.innerHTML}</div><pre style="padding-left:2rem;font-family:var(--mono);font-size:.72rem;line-height:2;color:var(--txd)">${hl}</pre>`;
-    gpr.textContent='// Fix the highlighted error';gh.textContent='Hint: '+cc.hint;gi.value='';gst.textContent='';gst.className='game-status';gi.focus();
-}
-
-gi.addEventListener('keydown',e=>{if(e.key==='Enter'&&gameActive){const a=gi.value.trim();
-if(a===cc.fix){score+=100;se.textContent=score;gst.textContent='✓ Correct! +100';gst.className='game-status correct';setTimeout(nextC,800)}
-else{gst.textContent='✗ Try again. Expected: '+cc.fix;gst.className='game-status wrong';gi.value=''}}});
 
 
 // SCROLL REVEAL
