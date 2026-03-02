@@ -409,13 +409,22 @@
         .void-debug.active{display:block}
         @keyframes vPulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.4);opacity:.12}}
 
+        /* AMBIENT TOGGLE */
+        .amb-toggle{position:fixed;bottom:3.5rem;right:1.5rem;z-index:99;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .8s}
+        .amb-toggle.vis{opacity:1;pointer-events:auto}
+        .amb-toggle svg circle,.amb-toggle svg path{fill:none;stroke:rgba(255,255,255,0.12);stroke-width:1.2;stroke-linecap:round;transition:stroke-opacity .5s,stroke .3s}
+        .amb-toggle svg circle{fill:rgba(255,255,255,0.12);stroke:none}
+        .amb-toggle:hover svg circle,.amb-toggle:hover svg path{stroke:rgba(255,255,255,0.25)}
+        .amb-toggle:hover svg circle{fill:rgba(255,255,255,0.25)}
+        .amb-toggle.muted svg path{stroke-opacity:0}
+
         @media(max-width:900px){
             .hero-c{padding:8rem 1.5rem 4rem}.h-meta{flex-direction:column;gap:1.5rem}nav{padding:1rem 1.5rem}.n-links{display:none}.sec{padding:6rem 1.5rem}
             .e-item{grid-template-columns:1fr;gap:.5rem;margin:0;padding:2rem 0}.axiom-head{flex-direction:column;gap:1.5rem}.axiom-stats{text-align:left}
             .proj-grid{grid-template-columns:1fr}
             .signal-core{padding:6rem 1.5rem}.toge-core{padding:6rem 1.5rem}.t-stats{flex-direction:column;gap:2rem}
             .contact{padding:8rem 1.5rem}.cls{flex-direction:column;align-items:center}
-            footer{flex-direction:column;gap:1rem;text-align:center}.h-scroll,.hud{display:none}
+            footer{flex-direction:column;gap:1rem;text-align:center}.h-scroll,.hud,.amb-toggle{display:none}
             .void-container{height:70vh}
             .void-fade-in,.void-fade-out{height:12vh}
         }
@@ -482,6 +491,7 @@
 <div class="hud hud-tr"><span class="hud-section" id="hudSection">SECTION 00 / OVERVIEW</span></div>
 <div class="hud hud-bl">37.0000°N 122.0590°W</div>
 <div class="hud hud-br">CLEARANCE: PUBLIC</div>
+<div class="amb-toggle" id="ambToggle" aria-label="Toggle ambient sound"><svg viewBox="0 0 12 10" width="12" height="10"><circle cx="2" cy="5" r="1"/><path d="M5 2.5Q8 5 5 7.5"/><path d="M7.5 0.5Q11.5 5 7.5 9.5"/></svg></div>
 
 <div id="ko"></div>
 <div id="konami"><h3>You Found It</h3><p>If you're reading this, you're the type<br/>who looks deeper. I respect that.<br/><br/>The best things are hidden in plain sight.<br/>— Arnaud</p><div class="close-k" onclick="document.getElementById('konami').classList.remove('show');document.getElementById('ko').classList.remove('show')">[ close ]</div></div>
@@ -2439,6 +2449,234 @@ var voidObs=new IntersectionObserver(function(entries){
   });
 },{threshold:0.05});
 voidObs.observe(voidContainer);
+
+})();
+
+// === AMBIENT SOUND SYSTEM ===
+(function(){
+'use strict';
+
+var ctx=null,started=false,muted=false,ducked=false;
+var masterGain=null,tonalGain=null,breathGain=null,noiseGain=null,noiseFilter=null;
+var oscs=[],curZone='default',BASE=0.012;
+var toggleEl=document.getElementById('ambToggle');
+var swapTimer=null,activated=false;
+
+// Zone chords: [freq1, freq1+beat, perfect_fifth]
+var CHORDS={
+'default':[65.4,66.9,98.0],
+'zone-toge':[55.0,56.0,82.4],
+'zone-signal':[164.8,166.8,246.9]
+};
+
+// Noise bandpass config per zone
+var NOISE_CFG={
+'default':{f:350,q:0.4,g:0.005},
+'zone-toge':{f:200,q:0.3,g:0.004},
+'zone-signal':{f:500,q:0.5,g:0.006}
+};
+
+function getZone(){
+var cl=document.body.classList;
+if(cl.contains('zone-void'))return 'zone-void';
+if(cl.contains('zone-toge'))return 'zone-toge';
+if(cl.contains('zone-signal'))return 'zone-signal';
+return 'default';
+}
+
+// Pink noise via Paul Kellett's refined coefficients (1/f spectral slope)
+function genPink(len){
+var buf=ctx.createBuffer(1,len,ctx.sampleRate);
+var d=buf.getChannelData(0);
+var b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+for(var i=0;i<len;i++){
+var w=Math.random()*2-1;
+b0=0.99886*b0+w*0.0555179;
+b1=0.99332*b1+w*0.0750759;
+b2=0.96900*b2+w*0.1538520;
+b3=0.86650*b3+w*0.3104856;
+b4=0.55000*b4+w*0.5329522;
+b5=-0.7616*b5-w*0.0168980;
+d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;
+b6=w*0.115926;
+}
+return buf;
+}
+
+function tgt(){
+if(muted)return 0;
+if(curZone==='zone-void')return 0;
+if(ducked)return BASE*0.2;
+return BASE;
+}
+
+function ramp(dur){
+if(ctx.state==='suspended')ctx.resume();
+var t=ctx.currentTime;
+masterGain.gain.cancelScheduledValues(t);
+masterGain.gain.setValueAtTime(masterGain.gain.value,t);
+masterGain.gain.linearRampToValueAtTime(tgt(),t+dur);
+}
+
+function makeOscs(z){
+var freqs=CHORDS[z]||CHORDS['default'];
+if(!freqs)return;
+freqs.forEach(function(f){
+var o=ctx.createOscillator();o.type='sine';o.frequency.value=f;
+o.connect(tonalGain);o.start();oscs.push(o);
+});
+}
+
+function killOscs(){
+oscs.forEach(function(o){try{o.stop();}catch(e){}});
+oscs=[];
+}
+
+function changeZone(z){
+if(z===curZone||!started)return;
+var prev=curZone;
+curZone=z;
+if(swapTimer){clearTimeout(swapTimer);swapTimer=null;}
+var t=ctx.currentTime;
+var nc=NOISE_CFG[z]||NOISE_CFG['default'];
+
+// Crossfade noise texture over 3s
+noiseFilter.frequency.cancelScheduledValues(t);
+noiseFilter.frequency.setValueAtTime(noiseFilter.frequency.value,t);
+noiseFilter.frequency.linearRampToValueAtTime(nc.f,t+3);
+noiseFilter.Q.value=nc.q;
+noiseGain.gain.cancelScheduledValues(t);
+noiseGain.gain.setValueAtTime(noiseGain.gain.value,t);
+noiseGain.gain.linearRampToValueAtTime(z==='zone-void'?0:nc.g,t+3);
+
+// Void: fade everything to silence
+if(z==='zone-void'){ramp(1.5);return;}
+
+// Leaving void: restore oscillators and master
+if(prev==='zone-void'){killOscs();makeOscs(z);ramp(2);return;}
+
+// Normal crossfade: ramp tonal to 0, swap oscillators, ramp back
+tonalGain.gain.cancelScheduledValues(t);
+tonalGain.gain.setValueAtTime(tonalGain.gain.value,t);
+tonalGain.gain.linearRampToValueAtTime(0.001,t+1.5);
+swapTimer=setTimeout(function(){
+killOscs();makeOscs(z);
+var t2=ctx.currentTime;
+tonalGain.gain.cancelScheduledValues(t2);
+tonalGain.gain.setValueAtTime(0.001,t2);
+tonalGain.gain.linearRampToValueAtTime(1.0,t2+1.5);
+swapTimer=null;
+},1500);
+ramp(2);
+}
+
+function init(){
+if(started)return;
+try{
+ctx=new(window.AudioContext||window.webkitAudioContext)();
+if(ctx.state==='suspended')ctx.resume();
+
+// Master gain — overall volume, mute/duck control
+masterGain=ctx.createGain();
+masterGain.gain.value=0;
+masterGain.connect(ctx.destination);
+
+// Tonal crossfade gain
+tonalGain=ctx.createGain();
+tonalGain.gain.value=1.0;
+
+// Breath gain — LFO modulation target
+breathGain=ctx.createGain();
+breathGain.gain.value=1.0;
+tonalGain.connect(breathGain);
+breathGain.connect(masterGain);
+
+// LFO: 0.08 Hz sine (one cycle per 12.5s), ±0.25 depth on breath
+var lfo=ctx.createOscillator();
+lfo.type='sine';
+lfo.frequency.value=0.08;
+var lfoD=ctx.createGain();
+lfoD.gain.value=0.25;
+lfo.connect(lfoD);
+lfoD.connect(breathGain.gain);
+lfo.start();
+
+// Pink noise texture layer
+var nbuf=genPink(ctx.sampleRate*4);
+var nsrc=ctx.createBufferSource();
+nsrc.buffer=nbuf;nsrc.loop=true;
+noiseFilter=ctx.createBiquadFilter();
+noiseFilter.type='bandpass';
+noiseGain=ctx.createGain();
+nsrc.connect(noiseFilter);
+noiseFilter.connect(noiseGain);
+noiseGain.connect(masterGain);
+nsrc.start();
+
+// Set initial zone
+curZone=getZone();
+var nc=NOISE_CFG[curZone]||NOISE_CFG['default'];
+noiseFilter.frequency.value=nc.f;
+noiseFilter.Q.value=nc.q;
+noiseGain.gain.value=curZone==='zone-void'?0:nc.g;
+if(curZone!=='zone-void')makeOscs(curZone);
+
+started=true;
+
+// Fade in over 2s
+masterGain.gain.setValueAtTime(0,ctx.currentTime);
+masterGain.gain.linearRampToValueAtTime(tgt(),ctx.currentTime+2);
+if(toggleEl)toggleEl.classList.add('vis');
+}catch(e){}
+}
+
+// First interaction activator (autoplay policy compliant)
+function activate(){if(activated)return;activated=true;init();}
+['click','scroll','touchstart','keydown'].forEach(function(ev){
+document.addEventListener(ev,activate,{capture:true});
+});
+
+// Zone change detection via MutationObserver on body class
+new MutationObserver(function(){
+if(!started)return;
+var z=getZone();
+if(z!==curZone)changeZone(z);
+}).observe(document.body,{attributes:true,attributeFilter:['class']});
+
+// Mute toggle
+if(toggleEl){
+toggleEl.addEventListener('click',function(){
+muted=!muted;
+toggleEl.classList.toggle('muted',muted);
+if(started)ramp(1);
+});
+}
+
+// Frequency player ducking — poll play button state
+setInterval(function(){
+if(!started)return;
+var btn=document.getElementById('freqPlay');
+var playing=btn&&btn.textContent==='\u275A\u275A';
+if(playing&&!ducked){ducked=true;ramp(2);}
+else if(!playing&&ducked){ducked=false;ramp(2);}
+},500);
+
+// Visibility API — save resources when tab is hidden
+document.addEventListener('visibilitychange',function(){
+if(!started)return;
+if(document.hidden){
+var t=ctx.currentTime;
+masterGain.gain.cancelScheduledValues(t);
+masterGain.gain.setValueAtTime(masterGain.gain.value,t);
+masterGain.gain.linearRampToValueAtTime(0,t+0.5);
+}else{
+if(ctx.state==='suspended')ctx.resume();
+var t2=ctx.currentTime;
+masterGain.gain.cancelScheduledValues(t2);
+masterGain.gain.setValueAtTime(masterGain.gain.value,t2);
+masterGain.gain.linearRampToValueAtTime(tgt(),t2+1);
+}
+});
 
 })();
 
