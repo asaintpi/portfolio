@@ -139,18 +139,111 @@
         .pt{display:flex;flex-wrap:wrap;gap:.4rem}
         .pt span{font-family:var(--mono);font-size:.52rem;letter-spacing:.05em;padding:.22rem .45rem;background:var(--gold-ll);border:1px solid rgba(205,162,78,.08);border-radius:3px;color:var(--gold)}
 
-        /* SYNTAX ERROR */
-        .proj-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2rem}
-        .game-card{background:#0a0a0a;border:1px solid var(--br);border-radius:.6rem;overflow:hidden;transition:border-color .4s cubic-bezier(.16,1,.3,1)}
-        .game-card:hover{border-color:rgba(205,162,78,.15)}
-        .game-card-header{padding:1.2rem 2rem;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:1rem}
-        .game-card-icon{font-size:1.1rem}
-        .game-card-title{font-family:var(--disp);font-size:1rem;color:var(--tx)}
-        .game-card-sub{font-family:var(--mono);font-size:.5rem;color:var(--txd);letter-spacing:.1em}
-        .game-card-body{padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-        .game-card-desc{font-family:var(--mono);font-size:.55rem;color:var(--txd);line-height:1.8;letter-spacing:.04em}
-        .game-card-arrow{font-size:1.2rem;color:var(--txm);transition:color .3s,transform .3s}
-        .game-card:hover .game-card-arrow{color:var(--gold);transform:translateX(4px)}
+        .proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+
+        /* SYNTAX ERROR ARCADE (namespaced) */
+        .se-arcade{outline:none;margin-top:2rem}
+        .se-arcade .console{width:100%;aspect-ratio:16/9.5;background:linear-gradient(170deg,#0f0f0f 0%,#090909 50%,#060606 100%);border-radius:14px;padding:14px 16px 20px;box-shadow:0 24px 80px rgba(0,0,0,0.85),0 0 1px rgba(255,255,255,0.04),inset 0 1px 0 rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.025);position:relative;display:flex;flex-direction:column;font-family:'Courier New','Lucida Console',monospace}
+        .se-arcade .top-strip{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 6px}
+        .se-arcade .brand{font-size:7.5px;letter-spacing:5px;color:rgba(255,255,255,0.05);text-transform:uppercase}
+        .se-arcade .model{font-size:7px;letter-spacing:2px;color:rgba(255,255,255,0.03);display:flex;align-items:center;gap:10px}
+        .se-arcade .led{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.03);transition:background 0.3s}
+        .se-arcade .led.on{background:#4AF68A;animation:sePwrPulse 2s ease-in-out infinite}
+        .se-arcade .bezel{flex:1;background:linear-gradient(145deg,#0b0b0b,#050505);border-radius:8px;padding:5px;box-shadow:inset 0 2px 10px rgba(0,0,0,0.9),0 1px 0 rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.015);display:flex;min-height:0}
+        .se-arcade .screen{flex:1;background:#060806;border-radius:4px;position:relative;overflow:hidden;transition:background 0.6s}
+        .se-arcade .screen.on{background:#0a120a;animation:seScrOn 0.5s ease forwards,seFlick 5s infinite 0.5s}
+        .se-arcade .scanlines{position:absolute;inset:0;pointer-events:none;z-index:10;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.13) 2px,rgba(0,0,0,0.13) 4px);mix-blend-mode:multiply;display:none}
+        .se-arcade .screen.on .scanlines{display:block}
+        .se-arcade .crt-curve{position:absolute;inset:0;pointer-events:none;z-index:11;border-radius:6px;box-shadow:inset 0 0 100px rgba(0,0,0,0.5),inset 0 0 30px rgba(0,0,0,0.25);display:none}
+        .se-arcade .screen.on .crt-curve{display:block}
+        .se-arcade .phosphor{position:absolute;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 50%,rgba(74,246,138,0.025) 0%,transparent 65%);display:none}
+        .se-arcade .screen.on .phosphor{display:block}
+        .se-arcade .screen-content{position:relative;z-index:5;height:100%;display:flex;flex-direction:column}
+        .se-arcade .off-msg{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+        .se-arcade .off-msg .prompt{font-size:14px;color:rgba(74,246,138,0.45);letter-spacing:4px;animation:seBlink 1.5s infinite;text-shadow:0 0 10px rgba(74,246,138,0.4)}
+        .se-arcade .off-msg .sub{font-size:10px;color:rgba(74,246,138,0.08);letter-spacing:2px}
+        .se-arcade .boot{padding:24px 32px;height:100%;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+        .se-arcade .boot-line{font-size:12px;line-height:1.8;letter-spacing:0.3px;white-space:pre;opacity:0;transition:opacity 0.15s}
+        .se-arcade .boot-line.show{opacity:1}
+        .se-arcade .boot-line.fr{color:rgba(74,246,138,0.45)}
+        .se-arcade .boot-line.hd{color:rgba(74,246,138,0.95);text-shadow:0 0 10px rgba(74,246,138,0.4)}
+        .se-arcade .boot-line.sy{color:rgba(74,246,138,0.45)}
+        .se-arcade .boot-line.dm{color:rgba(74,246,138,0.08)}
+        .se-arcade .boot-line.st{color:rgba(74,246,138,0.7)}
+        .se-arcade .boot-line.ct{color:rgba(74,246,138,0.7)}
+        .se-arcade .boot-line.go{color:rgba(74,246,138,0.95);text-shadow:0 0 10px rgba(74,246,138,0.4);animation:seBlink 1.2s infinite}
+        .se-arcade .start-btn{background:transparent;border:1px solid rgba(74,246,138,0.2);color:rgba(74,246,138,0.95);font-family:inherit;font-size:13px;padding:10px 44px;cursor:pointer;letter-spacing:2px;text-shadow:0 0 8px rgba(74,246,138,0.4);margin:16px auto 0;display:none;transition:all 0.2s}
+        .se-arcade .start-btn:hover{background:rgba(74,246,138,0.06);border-color:rgba(74,246,138,0.7)}
+        .se-arcade .start-btn.show{display:block}
+        .se-arcade .game{padding:14px 22px;height:100%;display:flex;flex-direction:column}
+        .se-arcade .hud{position:static;z-index:auto;pointer-events:auto;font-family:inherit;opacity:1;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:10.5px;letter-spacing:1.2px}
+        .se-arcade .hud-left{display:flex;gap:24px}
+        .se-arcade .hud-rnd{color:rgba(74,246,138,0.45)}
+        .se-arcade .hud-rnd b{color:rgba(74,246,138,0.7)}
+        .se-arcade .hud-rnd span{color:rgba(74,246,138,0.2)}
+        .se-arcade .hud-streak{color:rgba(74,246,138,0.08);transition:color 0.3s}
+        .se-arcade .hud-streak.active{color:rgba(74,246,138,0.45)}
+        .se-arcade .hud-streak.hot{color:rgba(246,200,74,0.9)}
+        .se-arcade .hud-score{color:rgba(74,246,138,0.45)}
+        .se-arcade .hud-score b{color:rgba(74,246,138,0.95);text-shadow:0 0 6px rgba(74,246,138,0.4)}
+        .se-arcade .timer-bar{height:2px;background:rgba(74,246,138,0.08);margin-bottom:10px;border-radius:1px;overflow:hidden}
+        .se-arcade .timer-fill{height:100%;border-radius:1px;width:100%;transition:width 1s linear,background 0.4s ease;background:#4AF68A;box-shadow:0 0 4px rgba(74,246,138,0.4)}
+        .se-arcade .timer-fill.warn{background:#F6C84A;box-shadow:0 0 6px rgba(246,200,74,0.4)}
+        .se-arcade .timer-fill.danger{background:#F6554A;box-shadow:0 0 8px rgba(246,85,74,0.4)}
+        .se-arcade .game-main{flex:1;display:flex;gap:18px;overflow:hidden;min-height:0}
+        .se-arcade .code-block{flex:1 1 70%;overflow:auto;background:rgba(0,0,0,0.25);border-radius:4px;border:1px solid rgba(74,246,138,0.08);padding:6px 2px}
+        .se-arcade .code-line{font-size:12.5px;line-height:2.05;padding:0 12px;cursor:pointer;border-radius:2px;display:flex;gap:14px;transition:all 0.1s;user-select:none;border-left:2px solid transparent}
+        .se-arcade .code-line:hover{background:rgba(74,246,138,0.025);border-left-color:rgba(74,246,138,0.2)}
+        .se-arcade .code-line .ln{color:rgba(74,246,138,0.08);font-size:10px;min-width:16px;text-align:right;padding-top:3px}
+        .se-arcade .code-line .cd{color:rgba(74,246,138,0.7);white-space:pre}
+        .se-arcade .code-line:hover .cd{color:rgba(74,246,138,0.95)}
+        .se-arcade .code-line.correct{background:rgba(74,246,138,0.08);border-left-color:rgba(74,246,138,0.45)}
+        .se-arcade .code-line.correct .ln{color:rgba(74,246,138,0.45)}
+        .se-arcade .code-line.correct .cd{color:rgba(74,246,138,0.95);text-shadow:0 0 8px rgba(74,246,138,0.4)}
+        .se-arcade .code-line.wrong{background:rgba(246,85,74,0.06);border-left-color:rgba(246,85,74,0.8)}
+        .se-arcade .code-line.wrong .ln{color:rgba(246,85,74,0.8)}
+        .se-arcade .code-line.wrong .cd{color:rgba(246,85,74,0.8)}
+        .se-arcade .code-line.locked{cursor:default}
+        .se-arcade .code-line.locked:hover{background:transparent;border-left-color:transparent}
+        .se-arcade .sidebar{flex:0 0 170px;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0}
+        .se-arcade .sidebar-label{font-size:9.5px;color:rgba(74,246,138,0.45);letter-spacing:1.8px;margin-bottom:8px}
+        .se-arcade .sidebar-val{font-size:12px;color:rgba(74,246,138,0.7);line-height:1.65}
+        .se-arcade .sidebar-group+.sidebar-group{margin-top:20px}
+        .se-arcade .feedback{min-height:65px;display:flex;align-items:flex-end}
+        .se-arcade .fb-inner{text-align:center;width:100%;animation:seFeedIn 0.15s ease}
+        .se-arcade .fb-msg{font-size:16px;letter-spacing:1.5px;font-weight:bold}
+        .se-arcade .fb-msg.ok{color:rgba(74,246,138,0.95);text-shadow:0 0 14px rgba(74,246,138,0.4)}
+        .se-arcade .fb-msg.bad{color:#F6554A;text-shadow:0 0 14px rgba(246,85,74,0.4)}
+        .se-arcade .fb-det{font-size:9.5px;color:rgba(74,246,138,0.45);margin-top:4px}
+        .se-arcade .sidebar-timer{font-size:9px;color:rgba(74,246,138,0.2);letter-spacing:1px;text-align:center;transition:color 0.3s}
+        .se-arcade .sidebar-timer.danger{color:rgba(246,85,74,0.8)}
+        .se-arcade .gameover{padding:30px;text-align:center;display:flex;flex-direction:column;height:100%;justify-content:center;gap:4px}
+        .se-arcade .go-title{font-size:12px;color:rgba(74,246,138,0.45);letter-spacing:5px}
+        .se-arcade .go-grade{font-size:64px;letter-spacing:6px;line-height:1.1;margin:8px 0}
+        .se-arcade .go-score{font-size:15px;color:rgba(74,246,138,0.7);letter-spacing:1.5px}
+        .se-arcade .go-streak{font-size:11px;color:rgba(74,246,138,0.45);letter-spacing:1px;margin-top:2px}
+        .se-arcade .go-hint{font-size:10px;color:rgba(74,246,138,0.2);letter-spacing:1.5px;margin-top:20px}
+        .se-arcade .go-btns{display:flex;gap:14px;justify-content:center;margin-top:14px}
+        .se-arcade .go-btn{background:transparent;font-family:inherit;font-size:11px;padding:8px 28px;cursor:pointer;letter-spacing:2px;transition:all 0.15s}
+        .se-arcade .go-btn.primary{border:1px solid rgba(74,246,138,0.2);color:rgba(74,246,138,0.95)}
+        .se-arcade .go-btn.primary:hover{background:rgba(74,246,138,0.05);border-color:rgba(74,246,138,0.45)}
+        .se-arcade .go-btn.secondary{border:1px solid rgba(74,246,138,0.08);color:rgba(74,246,138,0.45)}
+        .se-arcade .go-btn.secondary:hover{background:rgba(74,246,138,0.03)}
+        .se-arcade .bottom-strip{display:flex;justify-content:space-between;align-items:center;padding:10px 8px 0}
+        .se-arcade .keys{display:flex;gap:3px}
+        .se-arcade .key{width:22px;height:22px;border-radius:3px;background:linear-gradient(145deg,#141414,#0a0a0a);border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.12)}
+        .se-arcade .key.wide{width:auto;padding:4px 16px}
+        .se-arcade .strip-label{font-size:10px;color:rgba(255,255,255,0.1);letter-spacing:1.5px}
+        .se-arcade .strip-left,.se-arcade .strip-right{display:flex;align-items:center;gap:14px}
+        .se-arcade .strip-right{gap:20px}
+        .se-arcade .strip-group{display:flex;align-items:center;gap:8px}
+        .se-arcade .speaker{display:grid;grid-template-columns:repeat(6,1fr);gap:2.5px}
+        .se-arcade .speaker-dot{width:2px;height:2px;border-radius:50%;background:rgba(255,255,255,0.015)}
+        @keyframes seBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
+        @keyframes seFeedIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes sePwrPulse{0%,100%{box-shadow:0 0 3px rgba(74,246,138,0.3)}50%{box-shadow:0 0 8px rgba(74,246,138,0.5)}}
+        @keyframes seScrOn{0%{opacity:0;transform:scaleY(0.003)}30%{opacity:1;transform:scaleY(0.003)}55%{transform:scaleY(1) scaleX(0.7)}100%{transform:scaleY(1) scaleX(1)}}
+        @keyframes seFlick{0%,100%{opacity:1}93%{opacity:1}93.3%{opacity:0.88}93.8%{opacity:1}}
 
         /* PATHFINDER */
         .path-wrap{background:#0a0a0a;border:1px solid var(--br);border-radius:.6rem;overflow:hidden}
@@ -421,7 +514,7 @@
             <div class="axiom-foot"><div class="axiom-foot-l"></div><div class="pt"><span>Python</span><span>TradingView</span><span>Pine Script</span><span>Statistical Analysis</span></div></div>
         </div>
 
-        <!-- PATHFINDER + SYNTAX ERROR + GRAVITY LAB -->
+        <!-- PATHFINDER + GRAVITY LAB -->
         <div class="proj-grid r">
             <div class="path-wrap">
                 <div class="path-header">
@@ -439,13 +532,48 @@
                     <div class="path-stat">Algorithm: <b>A* with Manhattan heuristic</b></div>
                 </div>
             </div>
-            <a href="arcade/syntax-error.html" class="game-card" style="text-decoration:none;display:block">
-                <div class="game-card-header"><span class="game-card-icon">⌨</span><div><div class="game-card-title">Syntax Error</div><div class="game-card-sub">Find the bug. Fix it. Score points.</div></div></div>
-                <div class="game-card-body"><div class="game-card-desc">A retro debugging game. Spot the Python bug. Type the corrected line.</div><span class="game-card-arrow">→</span></div>
-            </a>
             <div class="physics-wrap">
                 <div class="physics-header"><div><div class="physics-title">Gravity Lab</div><div class="physics-sub">N-Body Gravity</div></div><div class="physics-hint">Click to spawn · Hold to attract</div></div>
                 <canvas id="physCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- SYNTAX ERROR ARCADE (inline) -->
+        <div class="se-arcade r" tabindex="0">
+            <div class="console">
+                <div class="top-strip">
+                    <div class="brand">SYNTAX ERROR</div>
+                    <div class="model">ASP-01 <div class="led" id="seLed"></div></div>
+                </div>
+                <div class="bezel">
+                    <div class="screen" id="seScreen">
+                        <div class="scanlines"></div>
+                        <div class="crt-curve"></div>
+                        <div class="phosphor"></div>
+                        <div class="screen-content" id="seContent"></div>
+                    </div>
+                </div>
+                <div class="bottom-strip">
+                    <div class="strip-left">
+                        <div class="keys">
+                            <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+                            <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+                            <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+                        </div>
+                        <div class="strip-label">LINE SELECT</div>
+                    </div>
+                    <div class="strip-right">
+                        <div class="strip-group">
+                            <div class="strip-label">CONFIRM</div>
+                            <div class="key wide">ENTER</div>
+                        </div>
+                        <div class="strip-group">
+                            <div class="strip-label">RETRY</div>
+                            <div class="key">R</div>
+                        </div>
+                        <div class="speaker" id="seSpeaker"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1339,6 +1467,303 @@ var sigObs=new IntersectionObserver(function(es){
 var sigTarget=document.getElementById('signal');
 if(sigTarget)sigObs.observe(sigTarget);
 
+})();
+
+// === SYNTAX ERROR ARCADE (scoped IIFE) ===
+(function(){
+'use strict';
+
+var root = document.querySelector('.se-arcade');
+if (!root) return;
+
+function $(id){ return root.querySelector('#'+id); }
+function $$(sel){ return root.querySelectorAll(sel); }
+
+// Speaker dots
+(function(){var s=$('seSpeaker');if(!s)return;for(var i=0;i<18;i++){var d=document.createElement('div');d.className='speaker-dot';s.appendChild(d);}})();
+
+// Challenges
+var CH=[
+  {lang:"python",code:"def fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n - 1) + fibonacci(n + 1)",bug:3,hint:"recursion direction"},
+  {lang:"python",code:'def reverse_string(s):\n    result = ""\n    for i in range(len(s), 0, -1):\n        result += s[i]\n    return result',bug:2,hint:"off-by-one boundary"},
+  {lang:"python",code:"def is_palindrome(s):\n    s = s.lower().strip()\n    return s = s[::-1]",bug:2,hint:"comparison vs assignment"},
+  {lang:"python",code:"def binary_search(arr, target):\n    lo, hi = 0, len(arr)\n    while lo < hi:\n        mid = (lo + hi) / 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return -1",bug:3,hint:"integer division"},
+  {lang:"python",code:"def flatten(lst):\n    result = []\n    for item in lst:\n        if type(item) == list:\n            result.append(flatten(item))\n        else:\n            result.append(item)\n    return result",bug:4,hint:"append vs extend"},
+  {lang:"python",code:"class Stack:\n    def __init__(self):\n        self.items = []\n    \n    def pop(self):\n        return self.items.pop()\n    \n    def peek(self):\n        return self.items.pop()",bug:8,hint:"peek shouldn't mutate"},
+  {lang:"python",code:'def count_words(text):\n    words = text.split(" ")\n    counts = {}\n    for word in words:\n        counts[word] = counts[word] + 1\n    return counts',bug:4,hint:"missing key"},
+  {lang:"python",code:"def matrix_transpose(m):\n    rows = len(m)\n    cols = len(m[0])\n    result = [[0] * cols] * rows\n    for i in range(rows):\n        for j in range(cols):\n            result[j][i] = m[i][j]\n    return result",bug:3,hint:"shallow copy trap"},
+  {lang:"python",code:"def merge_sorted(a, b):\n    result = []\n    i = j = 0\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            result.append(a[i])\n            i += 1\n        else:\n            result.append(b[j])\n            i += 1\n    return result + a[i:] + b[j:]",bug:9,hint:"wrong index increment"},
+  {lang:"python",code:"def power(base, exp):\n    if exp == 0:\n        return 1\n    if exp % 2 == 0:\n        half = power(base, exp / 2)\n        return half * half\n    return base * power(base, exp - 1)",bug:4,hint:"integer division"},
+  {lang:"python",code:"def remove_dupes(lst):\n    seen = set()\n    result = []\n    for item in lst:\n        if item not in seen:\n            result.append(item)\n    return result",bug:5,hint:"never adds to seen"},
+  {lang:"python",code:'def safe_divide(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return None\n    except TypeError:\n        raise ValueError("Invalid input")\n    finally:\n        return -1',bug:8,hint:"finally overrides return"}
+];
+
+// Audio
+var audioCtx=null;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function beep(freq,dur,vol,type){
+  vol=vol||0.05;type=type||'square';
+  try{var c=getAudio(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=freq;g.gain.value=vol;g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur);}catch(e){}
+}
+var snd={
+  boot:function(){beep(220,.08);setTimeout(function(){beep(330,.08)},100);setTimeout(function(){beep(440,.15,.06)},200);},
+  sel:function(){beep(660,.05,.04);},
+  ok:function(){beep(523,.07,.05);setTimeout(function(){beep(659,.07,.05)},70);setTimeout(function(){beep(784,.1,.06)},140);},
+  bad:function(){beep(150,.18,.05,'sawtooth');},
+  tick:function(){beep(880,.015,.02);},
+  hov:function(){beep(1200,.012,.012);}
+};
+
+// State
+var seState='off';
+var sePower=false;
+var gameState=null;
+var timerInterval=null;
+var bootTimers=[];
+var bootReady=false;
+
+// Focus/hover tracking
+var seActive=false;
+root.addEventListener('mouseenter',function(){seActive=true;});
+root.addEventListener('mouseleave',function(){seActive=false;});
+root.addEventListener('focusin',function(){seActive=true;});
+root.addEventListener('focusout',function(){seActive=false;});
+
+function render(){
+  var content=$('seContent');
+  if(!content)return;
+  if(seState==='off')renderOff(content);
+  else if(seState==='boot')renderBoot(content);
+  else if(seState==='game')renderGame(content);
+  else if(seState==='over')renderOver(content);
+}
+
+function renderOff(el){
+  el.innerHTML='<div class="off-msg"><div class="prompt">PRESS  [ ENTER ]</div><div class="sub">TO POWER ON</div></div>';
+}
+
+var BOOT_LINES=[
+  {t:"\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557",d:0,c:"fr"},
+  {t:"\u2551  SYNTAX_ERR  v2.1                                          MODEL ASP-01  \u2551",d:120,c:"hd"},
+  {t:"\u255A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255D",d:200,c:"fr"},
+  {t:"INIT ROM \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588 OK    DISPLAY: PHOSPHOR-III    MEM: 64KB",d:450,c:"sy"},
+  {t:"\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",d:700,c:"dm"},
+  {t:"",d:850,c:"dm"},
+  {t:"I kept making the same small errors when writing code. Missing colons.",d:1000,c:"st"},
+  {t:"Wrong indentation. Off-by-one. Every time. So I built a game to train",d:1250,c:"st"},
+  {t:"my eyes to catch them in seconds. Here\u2019s a mini version.",d:1500,c:"st"},
+  {t:"",d:1750,c:"dm"},
+  {t:"CONTROLS:  [1-9] select line  \u00B7  [ENTER] start/confirm  \u00B7  [R] retry  \u00B7  [ESC] quit",d:1950,c:"ct"},
+  {t:"",d:2200,c:"dm"},
+  {t:">>  PRESS  [ ENTER ]  TO  BEGIN  <<",d:2450,c:"go"}
+];
+
+function renderBoot(el){
+  bootReady=false;
+  var html='<div class="boot">';
+  BOOT_LINES.forEach(function(l,i){html+='<div class="boot-line '+l.c+'" id="seBl'+i+'">'+(l.t||'\u00A0')+'</div>';});
+  html+='<button class="start-btn" id="seStartBtn">[ START ]</button></div>';
+  el.innerHTML=html;
+  bootTimers.forEach(clearTimeout);
+  bootTimers=[];
+  BOOT_LINES.forEach(function(l,i){
+    bootTimers.push(setTimeout(function(){
+      var line=$('seBl'+i);
+      if(line)line.classList.add('show');
+      if(l.c==='sy')snd.tick();
+      if(l.c==='go'){
+        bootReady=true;
+        var btn=$('seStartBtn');
+        if(btn){btn.classList.add('show');btn.addEventListener('click',function(){snd.sel();startGame();});}
+      }
+    },l.d));
+  });
+}
+
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=a[i];a[i]=a[j];a[j]=tmp;}
+  return a;
+}
+
+function startGame(){
+  var order=shuffle(Array.from({length:CH.length},function(_,i){return i;}));
+  gameState={idx:0,order:order,score:0,streak:0,best:0,round:1,total:8,timer:18,fb:null,locked:false};
+  seState='game';
+  render();
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(function(){
+    if(!gameState||gameState.locked)return;
+    gameState.timer--;
+    updateTimerUI();
+    if(gameState.timer===3)snd.tick();
+    if(gameState.timer<=0){
+      clearInterval(timerInterval);
+      gameState.locked=true;
+      snd.bad();
+      gameState.streak=0;
+      showFeedback(false,"TIME'S UP",null);
+      setTimeout(advance,1500);
+    }
+  },1000);
+}
+
+function updateTimerUI(){
+  if(!gameState)return;
+  var fill=root.querySelector('.timer-fill');
+  var tLabel=root.querySelector('.sidebar-timer');
+  if(fill){fill.style.width=((gameState.timer/18)*100)+'%';fill.className='timer-fill'+(gameState.timer<=4?' danger':gameState.timer<=8?' warn':'');}
+  if(tLabel){tLabel.textContent=gameState.timer+'s';tLabel.className='sidebar-timer'+(gameState.timer<=4?' danger':'');}
+}
+
+function getCh(){return CH[gameState.order[gameState.idx%gameState.order.length]];}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function renderGame(el){
+  var ch=getCh();
+  var lines=ch.code.split('\n');
+  var g=gameState;
+  var html='<div class="game">';
+  html+='<div class="hud"><div class="hud-left">';
+  html+='<span class="hud-rnd">RND <b>'+g.round+'</b><span>/'+g.total+'</span></span>';
+  var sc=g.streak>=3?'hot':g.streak>=1?'active':'';
+  html+='<span class="hud-streak '+sc+'">'+(g.streak>0?'STREAK '+g.streak+'x':'')+'</span>';
+  html+='</div>';
+  html+='<span class="hud-score">SCORE <b>'+g.score+'</b></span></div>';
+  html+='<div class="timer-bar"><div class="timer-fill" style="width:'+((g.timer/18)*100)+'%"></div></div>';
+  html+='<div class="game-main">';
+  html+='<div class="code-block">';
+  lines.forEach(function(ln,i){
+    html+='<div class="code-line'+(g.locked?' locked':'')+'" data-line="'+i+'">';
+    html+='<span class="ln">'+(i+1)+'</span>';
+    html+='<span class="cd">'+escHtml(ln)+'</span>';
+    html+='</div>';
+  });
+  html+='</div>';
+  html+='<div class="sidebar"><div>';
+  html+='<div class="sidebar-group"><div class="sidebar-label">OBJECTIVE</div><div class="sidebar-val">Find the bug.<br>Click the line<br>or press [1-9].</div></div>';
+  html+='<div class="sidebar-group"><div class="sidebar-label">LANGUAGE</div><div class="sidebar-val">'+ch.lang.toUpperCase()+'</div></div>';
+  html+='<div class="sidebar-group"><div class="sidebar-label">LINES</div><div class="sidebar-val">'+lines.length+'</div></div>';
+  html+='</div>';
+  html+='<div class="feedback" id="seFbArea"></div>';
+  html+='<div class="sidebar-timer">'+g.timer+'s</div>';
+  html+='</div>';
+  html+='</div></div>';
+  el.innerHTML=html;
+  root.querySelectorAll('.code-line').forEach(function(el){
+    el.addEventListener('click',function(){pickLine(parseInt(el.dataset.line));});
+    el.addEventListener('mouseenter',function(){if(!gameState.locked)snd.hov();});
+  });
+}
+
+function pickLine(i){
+  if(!gameState||gameState.locked)return;
+  gameState.locked=true;
+  clearInterval(timerInterval);
+  var ch=getCh();
+  var lineEls=root.querySelectorAll('.code-line');
+  if(i===ch.bug){
+    snd.ok();
+    var pts=100+Math.floor(gameState.timer*12)+gameState.streak*30;
+    gameState.score+=pts;
+    gameState.streak++;
+    if(gameState.streak>gameState.best)gameState.best=gameState.streak;
+    lineEls[i].classList.add('correct');
+    showFeedback(true,'+'+pts,ch.hint);
+  }else{
+    snd.bad();
+    gameState.streak=0;
+    lineEls[i].classList.add('wrong');
+    lineEls[ch.bug].classList.add('correct');
+    showFeedback(false,'MISS','hint: '+ch.hint);
+  }
+  lineEls.forEach(function(el){el.classList.add('locked');});
+  setTimeout(advance,1700);
+}
+
+function showFeedback(ok,msg,det){
+  var area=$('seFbArea');
+  if(!area)return;
+  var html='<div class="fb-inner"><div class="fb-msg '+(ok?'ok':'bad')+'">'+msg+'</div>';
+  if(det)html+='<div class="fb-det">'+det+'</div>';
+  html+='</div>';
+  area.innerHTML=html;
+}
+
+function advance(){
+  if(!gameState)return;
+  if(gameState.round>=gameState.total){seState='over';clearInterval(timerInterval);render();return;}
+  gameState.round++;
+  gameState.idx++;
+  gameState.timer=18;
+  gameState.fb=null;
+  gameState.locked=false;
+  render();
+  startTimer();
+}
+
+function renderOver(el){
+  var g=gameState;
+  var grade=g.score>=1400?'S':g.score>=1000?'A':g.score>=700?'B':g.score>=400?'C':'D';
+  var gc=grade==='S'?'#F6C84A':grade==='A'?'#4AF68A':grade==='B'?'rgba(74,246,138,0.7)':grade==='C'?'rgba(74,246,138,0.45)':'rgba(246,85,74,0.8)';
+  var glow=grade==='S'?'rgba(246,200,74,0.4)':'rgba(74,246,138,0.4)';
+  var html='<div class="gameover">';
+  html+='<div class="go-title">MISSION COMPLETE</div>';
+  html+='<div class="go-grade" style="color:'+gc+';text-shadow:0 0 40px '+glow+'">'+grade+'</div>';
+  html+='<div class="go-score">SCORE  '+g.score+'</div>';
+  html+='<div class="go-streak">BEST STREAK  '+g.best+'x</div>';
+  html+='<div class="go-hint">[R] RETRY  \u00B7  [ESC] QUIT</div>';
+  html+='<div class="go-btns">';
+  html+='<button class="go-btn primary" id="seRetryBtn">RETRY</button>';
+  html+='<button class="go-btn secondary" id="seQuitBtn">QUIT</button>';
+  html+='</div></div>';
+  el.innerHTML=html;
+  var retryBtn=$('seRetryBtn');
+  var quitBtn=$('seQuitBtn');
+  if(retryBtn)retryBtn.addEventListener('click',function(){snd.sel();startGame();});
+  if(quitBtn)quitBtn.addEventListener('click',function(){snd.sel();goToBoot();});
+}
+
+function goToBoot(){
+  clearInterval(timerInterval);
+  gameState=null;
+  seState='boot';
+  render();
+}
+
+// Keyboard — scoped to focus/hover
+document.addEventListener('keydown',function(e){
+  if(!seActive)return;
+  if(e.key==='Enter'&&!sePower){
+    sePower=true;
+    var scr=$('seScreen');
+    var led=$('seLed');
+    if(scr)scr.classList.add('on');
+    if(led)led.classList.add('on');
+    snd.boot();
+    seState='boot';
+    render();
+    e.preventDefault();
+    return;
+  }
+  if(seState==='boot'&&e.key==='Enter'&&bootReady){snd.sel();startGame();e.preventDefault();return;}
+  if(seState==='game'&&gameState&&!gameState.locked){
+    var n=parseInt(e.key);
+    if(n>=1&&n<=getCh().code.split('\n').length){pickLine(n-1);e.preventDefault();}
+  }
+  if(seState==='over'){
+    if(e.key==='r'||e.key==='R'){snd.sel();startGame();e.preventDefault();}
+    if(e.key==='Escape'){snd.sel();goToBoot();e.preventDefault();}
+  }
+  if(seState==='game'&&e.key==='Escape'){snd.sel();clearInterval(timerInterval);goToBoot();e.preventDefault();}
+});
+
+render();
 })();
 </script>
 </body>
