@@ -46,6 +46,8 @@
         .ld-bar{width:160px;height:1px;background:var(--br);position:relative;overflow:hidden}
         .ld-bar::after{content:'';position:absolute;left:0;top:0;height:100%;width:0;background:var(--gold);animation:ldFill 2.2s cubic-bezier(.65,0,.35,1) forwards}
         @keyframes ldFill{to{width:100%}}
+        .ld-prime{font-family:var(--mono);font-size:.56rem;letter-spacing:.4em;text-transform:uppercase;color:var(--txm);opacity:0;transition:opacity .2s ease;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+        .ld-prime.out{transition:opacity .1s ease;opacity:0}
         .ld-class{font-family:var(--mono);font-size:.5rem;letter-spacing:.4em;color:var(--txm);text-transform:uppercase;opacity:0;animation:fadeIn .5s ease 1.6s forwards}
         @keyframes fadeIn{to{opacity:1}}
 
@@ -379,7 +381,7 @@
 <div id="ko"></div>
 <div id="konami"><h3>You Found It</h3><p>If you're reading this, you're the type<br/>who looks deeper. I respect that.<br/><br/>The best things are hidden in plain sight.<br/>— Arnaud</p><div class="close-k" onclick="document.getElementById('konami').classList.remove('show');document.getElementById('ko').classList.remove('show')">[ close ]</div></div>
 
-<div id="loader"><div class="ld-name" id="ldName"></div><div class="ld-bar"></div><div class="ld-class">Classification: Public</div></div>
+<div id="loader"><div class="ld-name" id="ldName"></div><div class="ld-bar"></div><div class="ld-prime" id="ldPrime"></div><div class="ld-class">Classification: Public</div></div>
 
 <nav id="nav">
     <div class="n-logo"><b>A</b>rnaud Saint-Pierre</div>
@@ -609,6 +611,9 @@
 const nm='ARNAUD SAINT-PIERRE';const ldn=document.getElementById('ldName');
 nm.split('').forEach((c,i)=>{const s=document.createElement('span');s.textContent=c===' '?'\u00A0':c;s.style.animationDelay=i*.04+'s';ldn.appendChild(s)});
 setTimeout(()=>document.getElementById('loader').classList.add('done'),2600);
+var ldp=document.getElementById('ldPrime');var primeWords=['ENGINEER','CREATOR','ARCHITECT'];
+primeWords.forEach(function(w,i){setTimeout(function(){ldp.classList.remove('out');ldp.textContent=w;ldp.style.opacity='1'},i*700);setTimeout(function(){ldp.classList.add('out');ldp.style.opacity='0'},i*700+500)});
+setTimeout(function(){ldp.style.display='none'},2100);
 
 // CURSOR
 const gl=document.getElementById('glow');let mx=innerWidth/2,my=innerHeight/2,gx=mx,gy=my;
