@@ -1970,7 +1970,7 @@ function voidLoop(now){
   // Update orb (gathering)
   if(orb.active){
     orb.x=mouse.x;orb.y=mouse.y;orb.time+=dt;
-    var gatherRadius=Math.min((100+orb.absorbed*8)*comboMultiplier,500);
+    var gatherRadius=Math.min((100+orb.absorbed*8)*comboMultiplier,1200);
     var pullStrength=Math.min((0.8+orb.absorbed*0.15)*comboMultiplier,8);
     for(var gi=0;gi<P.length;gi++){
       var gp=P[gi];
@@ -1986,7 +1986,7 @@ function voidLoop(now){
         gp.vy+=gnx*pull*orbitalStrength*dt;
         if(gDist<15+orb.size*0.4&&orb.absorbed<60){
           gp.gathered=true;orb.absorbed++;
-          orb.size=Math.min(Math.pow(orb.absorbed,0.6)*5,40);
+          orb.size=Math.min(Math.pow(orb.absorbed,0.6)*5,100);
           addGatherVoice(orb.absorbed);
         }
       }
@@ -1997,23 +1997,26 @@ function voidLoop(now){
     var orbHue=(hue+orb.absorbed*10)%360;
     var pulse=1+Math.sin(now*0.005)*(0.06+orb.absorbed*0.005);
     var breathe=1+Math.sin(now*0.002)*0.03;
-    var infR=Math.min(gatherRadius,500);
+    var infR=Math.min(gatherRadius,1200);
+    if(orb.time%2<1){
     var infGrad=ctx.createRadialGradient(orb.x,orb.y,orbR*0.5,orb.x,orb.y,infR*breathe);
     infGrad.addColorStop(0,'hsla('+orbHue+',50%,65%,'+(0.08+orb.absorbed*0.005)+')');
     infGrad.addColorStop(0.5,'hsla('+orbHue+',35%,70%,'+(0.03+orb.absorbed*0.002)+')');
     infGrad.addColorStop(1,'transparent');
     ctx.fillStyle=infGrad;ctx.beginPath();ctx.arc(orb.x,orb.y,infR*breathe,0,Math.PI*2);ctx.fill();
+    }
     if(orb.absorbed>1){
-      var spirals=Math.min(Math.floor(orb.absorbed*0.8),12);
+      var spirals=Math.min(Math.floor(orb.absorbed*0.4),6);
       var spiralSpeed=0.001+orb.absorbed*0.0003;
       for(var s=0;s<spirals;s++){
         ctx.beginPath();
         ctx.strokeStyle='hsla('+((orbHue+s*15)%360)+',45%,60%,'+(0.05+orb.absorbed*0.006)+')';
         ctx.lineWidth=1+orb.absorbed*0.05;
         var baseAngle=(Math.PI*2*s)/spirals+now*spiralSpeed;
-        for(var t=0;t<1;t+=0.035){
+        var spiralStep=0.02+Math.min(orb.absorbed,60)*0.001;
+        for(var t=0;t<1;t+=spiralStep){
           var sr=orbR*0.8+t*(infR*0.65-orbR);
-          var sa=baseAngle+t*(3+Math.min(orb.absorbed,50)*0.15);
+          var sa=baseAngle+t*(3+Math.pow(Math.min(orb.absorbed,60),0.7)*0.3);
           var spx=orb.x+Math.cos(sa)*sr;
           var spy=orb.y+Math.sin(sa)*sr;
           if(t===0)ctx.moveTo(spx,spy);else ctx.lineTo(spx,spy);
@@ -2021,8 +2024,10 @@ function voidLoop(now){
         ctx.stroke();
       }
     }
+    if(orb.absorbed<30){
     ctx.beginPath();ctx.arc(orb.x,orb.y,orbR*pulse*4,0,Math.PI*2);
     ctx.fillStyle='hsla('+orbHue+',55%,55%,'+(0.05+orb.absorbed*0.004)+')';ctx.fill();
+    }
     ctx.beginPath();ctx.arc(orb.x,orb.y,orbR*pulse*2.2,0,Math.PI*2);
     ctx.fillStyle='hsla('+orbHue+',50%,60%,'+(0.12+orb.absorbed*0.008)+')';ctx.fill();
     ctx.beginPath();ctx.arc(orb.x,orb.y,orbR*pulse,0,Math.PI*2);
