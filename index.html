@@ -663,24 +663,28 @@ const hc=document.getElementById('heroCanvas'),hx=hc.getContext('2d');
 function resH(){hc.width=hc.clientWidth;hc.height=hc.clientHeight}
 resH();window.addEventListener('resize',resH);
 const pts=[];for(let i=0;i<50;i++)pts.push({x:Math.random()*2000,y:Math.random()*1200,vx:(Math.random()-.5)*.1,vy:(Math.random()-.5)*.1,r:Math.random()*1.3+.4,a:Math.random()*.2+.05});
-function drawH(){hx.clearRect(0,0,hc.width,hc.height);const nx=mx/innerWidth,ny=my/innerHeight;
+var hVis=true,hRun=false;
+function drawH(){if(!hVis){hRun=false;return}hRun=true;hx.clearRect(0,0,hc.width,hc.height);const nx=mx/innerWidth,ny=my/innerHeight;
 pts.forEach(p=>{p.x+=p.vx+(nx-.5)*.2;p.y+=p.vy+(ny-.5)*.2;if(p.x<0)p.x=hc.width;if(p.x>hc.width)p.x=0;if(p.y<0)p.y=hc.height;if(p.y>hc.height)p.y=0;
 hx.beginPath();hx.arc(p.x,p.y,p.r,0,Math.PI*2);hx.fillStyle=`rgba(205,162,78,${p.a})`;hx.fill()});
 for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
 if(d<130){hx.beginPath();hx.moveTo(pts[i].x,pts[i].y);hx.lineTo(pts[j].x,pts[j].y);hx.strokeStyle=`rgba(205,162,78,${.035*(1-d/130)})`;hx.lineWidth=.5;hx.stroke()}}
 requestAnimationFrame(drawH)}drawH();
+new IntersectionObserver(function(es){hVis=es[0].isIntersecting;if(hVis&&!hRun)drawH()},{threshold:0}).observe(document.getElementById('hero'));
 
 // TOGE CANVAS
 const tc=document.getElementById('togeCanvas'),tx=tc.getContext('2d');
 function resT(){tc.width=tc.clientWidth;tc.height=tc.clientHeight}
 resT();window.addEventListener('resize',resT);
 const nds=[];for(let i=0;i<30;i++)nds.push({x:Math.random()*2000,y:Math.random()*1500,vx:(Math.random()-.5)*.05,vy:(Math.random()-.5)*.05,r:Math.random()*1.5+.5,ph:Math.random()*Math.PI*2});
-function drawT(){tx.clearRect(0,0,tc.width,tc.height);const t=Date.now()*.001;
+var tVis=false,tRun=false;
+function drawT(){if(!tVis){tRun=false;return}tRun=true;tx.clearRect(0,0,tc.width,tc.height);const t=Date.now()*.001;
 nds.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<0)n.x=tc.width;if(n.x>tc.width)n.x=0;if(n.y<0)n.y=tc.height;if(n.y>tc.height)n.y=0;
 const pa=Math.sin(t+n.ph)*.2+.2;tx.beginPath();tx.arc(n.x,n.y,n.r,0,Math.PI*2);tx.fillStyle=`rgba(184,58,58,${pa})`;tx.fill()});
 for(let i=0;i<nds.length;i++)for(let j=i+1;j<nds.length;j++){const dx=nds[i].x-nds[j].x,dy=nds[i].y-nds[j].y,d=Math.sqrt(dx*dx+dy*dy);
 if(d<160){tx.beginPath();tx.moveTo(nds[i].x,nds[i].y);tx.lineTo(nds[j].x,nds[j].y);tx.strokeStyle=`rgba(184,58,58,${.02*(1-d/160)})`;tx.lineWidth=.5;tx.stroke()}}
-requestAnimationFrame(drawT)}drawT();
+requestAnimationFrame(drawT)}
+new IntersectionObserver(function(es){tVis=es[0].isIntersecting;if(tVis&&!tRun)drawT()},{threshold:0}).observe(document.getElementById('toge'));
 
 // VOID TYPING
 const ve=document.getElementById('voidText');const vq='Ghosts can choose\nto become real.';let vt=false;
@@ -870,13 +874,14 @@ function drawGrid(){
 const pc=document.getElementById('physCanvas'),px=pc.getContext('2d');
 function resP(){pc.width=pc.clientWidth;pc.height=pc.clientHeight}
 resP();window.addEventListener('resize',resP);
+var pVis=false,pRun=false;
 const bodies=[];const G=.15;let md=false,pmx=0,pmy=0;
 for(let i=0;i<6;i++)bodies.push({x:pc.width*.15+Math.random()*pc.width*.7,y:pc.height*.15+Math.random()*pc.height*.7,vx:(Math.random()-.5)*1.2,vy:(Math.random()-.5)*1.2,m:Math.random()*7+3,color:`hsl(${35+Math.random()*15},${60+Math.random()*20}%,${55+Math.random()*15}%)`});
 pc.addEventListener('click',e=>{const r=pc.getBoundingClientRect();bodies.push({x:e.clientX-r.left,y:e.clientY-r.top,vx:(Math.random()-.5)*1.5,vy:(Math.random()-.5)*1.5,m:Math.random()*5+2,color:`hsl(${30+Math.random()*20},${60+Math.random()*20}%,${55+Math.random()*15}%)`});if(bodies.length>35)bodies.shift()});
 pc.addEventListener('mousedown',e=>{md=true;const r=pc.getBoundingClientRect();pmx=e.clientX-r.left;pmy=e.clientY-r.top});
 pc.addEventListener('mousemove',e=>{if(md){const r=pc.getBoundingClientRect();pmx=e.clientX-r.left;pmy=e.clientY-r.top}});
 pc.addEventListener('mouseup',()=>md=false);pc.addEventListener('mouseleave',()=>md=false);
-function drawP(){px.fillStyle='rgba(10,10,10,.2)';px.fillRect(0,0,pc.width,pc.height);
+function drawP(){if(!pVis){pRun=false;return}pRun=true;px.fillStyle='rgba(10,10,10,.2)';px.fillRect(0,0,pc.width,pc.height);
 for(let i=0;i<bodies.length;i++){for(let j=i+1;j<bodies.length;j++){const dx=bodies[j].x-bodies[i].x,dy=bodies[j].y-bodies[i].y,d=Math.sqrt(dx*dx+dy*dy)+5;
 const f=G*bodies[i].m*bodies[j].m/(d*d),ax=f*dx/d,ay=f*dy/d;
 bodies[i].vx+=ax/bodies[i].m;bodies[i].vy+=ay/bodies[i].m;bodies[j].vx-=ax/bodies[j].m;bodies[j].vy-=ay/bodies[j].m}
@@ -888,7 +893,8 @@ px.beginPath();px.arc(b.x,b.y,b.m,0,Math.PI*2);px.fillStyle=b.color;px.fill()});
 for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){const dx=bodies[i].x-bodies[j].x,dy=bodies[i].y-bodies[j].y,d=Math.sqrt(dx*dx+dy*dy);
 if(d<100){px.beginPath();px.moveTo(bodies[i].x,bodies[i].y);px.lineTo(bodies[j].x,bodies[j].y);px.strokeStyle=`rgba(205,162,78,${.06*(1-d/100)})`;px.lineWidth=.5;px.stroke()}}
 if(md){px.beginPath();px.arc(pmx,pmy,6,0,Math.PI*2);px.strokeStyle='rgba(205,162,78,.15)';px.lineWidth=1;px.stroke()}
-requestAnimationFrame(drawP)}drawP();
+requestAnimationFrame(drawP)}
+new IntersectionObserver(function(es){pVis=es[0].isIntersecting;if(pVis&&!pRun)drawP()},{threshold:0}).observe(document.getElementById('work'));
 
 function reinitPhysics(){
     setTimeout(()=>{
@@ -966,6 +972,7 @@ function initAudioContext(){
 freqAudio.addEventListener('error',(e)=>console.error('Audio error:',e.target.error,'Source:',freqAudio.src));
 
 const fCanvas=document.getElementById('freqCanvas'),fCtx=fCanvas.getContext('2d');
+var fVis=false,fRun=false;
 function resFreqCanvas(){
     const dpr=window.devicePixelRatio||1;
     fCanvas.width=fCanvas.offsetWidth*dpr;
@@ -982,7 +989,7 @@ function getFreqAccentColor(){
 }
 
 function drawFreqVis(){
-    requestAnimationFrame(drawFreqVis);
+    if(!fVis){fRun=false;return}fRun=true;
     var W=fCanvas.offsetWidth,H=fCanvas.offsetHeight;
     fCtx.clearRect(0,0,W,H);
     if(isPlaying&&analyserReady&&analyser){
@@ -1072,8 +1079,9 @@ function drawFreqVis(){
     fadeGrd.addColorStop(1,'rgba(5,5,5,1)');
     fCtx.fillStyle=fadeGrd;
     fCtx.fillRect(0,H-fadeH,W,fadeH);
+    requestAnimationFrame(drawFreqVis);
 }
-drawFreqVis();
+new IntersectionObserver(function(es){fVis=es[0].isIntersecting;if(fVis&&!fRun)drawFreqVis()},{threshold:0}).observe(document.getElementById('freq'));
 
 var loopActive=false;
 
@@ -1204,7 +1212,7 @@ var freqADefault=[120,95,45];
 var freqACur=[[120,95,45],[120,95,45],[120,95,45]];
 var freqATgt=[[120,95,45],[120,95,45],[120,95,45]];
 var freqAT=0;
-var freqAVisible=false;
+var freqAVisible=false,freqARun=false;
 
 var freqABlobs=[
     {ox:.2,oy:.35,sx:.5,sy:.4,r:.5,ci:0,a:.3},
@@ -1227,8 +1235,7 @@ function setFreqAuroraColor(accent){
 }
 
 function drawFreqAurora(){
-    requestAnimationFrame(drawFreqAurora);
-    if(!freqAVisible)return;
+    if(!freqAVisible){freqARun=false;return}freqARun=true;
     freqAT+=0.002;
     var w=freqAuroraCanvas.width,h=freqAuroraCanvas.height;
     if(w===0||h===0)return;
@@ -1247,11 +1254,11 @@ function drawFreqAurora(){
         freqACtx.fillStyle=grd;
         freqACtx.fillRect(0,0,w,h);
     });
+    requestAnimationFrame(drawFreqAurora);
 }
-drawFreqAurora();
 
 var freqSecObs=new IntersectionObserver(function(es){
-    es.forEach(function(e){freqAVisible=e.isIntersecting});
+    freqAVisible=es[0].isIntersecting;if(freqAVisible&&!freqARun)drawFreqAurora();
 },{threshold:.05});
 freqSecObs.observe(document.getElementById('freq'));
 
@@ -1282,7 +1289,7 @@ var sigACtx=sigAuroraCanvas.getContext('2d');
 var sigACur=[[3,3,4],[3,3,4],[3,3,4],[3,3,4],[3,3,4]];
 var sigATgt=[[3,3,4],[3,3,4],[3,3,4],[3,3,4],[3,3,4]];
 var sigAT=0;
-var sigAFrame=null;
+var sigAFrame=null,sigARun=false;
 
 var sigABlobs=[
     {ox:.15,oy:.45,sx:.7,sy:.5,rx:.42,ry:.32,ci:0,a:.35},
@@ -1310,10 +1317,7 @@ function updateSignalAurora(palette){
 }
 
 function drawSignalAurora(){
-    if(!sigVisible){
-        sigAFrame=requestAnimationFrame(drawSignalAurora);
-        return;
-    }
+    if(!sigVisible){sigARun=false;return}sigARun=true;
     sigAT+=0.003;
     var w=sigAuroraCanvas.width,h=sigAuroraCanvas.height;
     sigACtx.clearRect(0,0,w,h);
@@ -1410,10 +1414,8 @@ var sigObs=new IntersectionObserver(function(es){
     es.forEach(function(e){
         if(e.isIntersecting){
             sigVisible=true;
-            if(!sigActive){
-                sigActive=true;
-                sigTypePrompt();
-            }
+            if(!sigActive){sigActive=true;sigTypePrompt()}
+            if(!sigARun)drawSignalAurora();
         }else{
             sigVisible=false;
         }
