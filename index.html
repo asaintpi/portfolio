@@ -75,6 +75,13 @@
         .h-name .ln:nth-child(2) span{animation-delay:2.75s}
         .h-name .ln:nth-child(3) span{animation-delay:2.9s}
         .h-name em{font-style:italic;color:var(--gold)}
+        .h-hy{position:relative;cursor:grab;display:inline-block;user-select:none;-webkit-user-select:none;padding:0 2px}
+        .h-hy::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;opacity:0;transition:opacity .4s ease;pointer-events:none}
+        .h-hy::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:calc(50% - 30px);width:calc(var(--vol,1) * 60px);height:4px;background:var(--gold);border-radius:2px;opacity:0;transition:opacity .4s ease,width .05s linear;pointer-events:none}
+        .h-hy:hover::before,.h-hy:hover::after,.h-hy.dragging::before,.h-hy.dragging::after{opacity:1}
+        .h-hy-label{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.44rem;letter-spacing:.15em;color:var(--txd);opacity:0;transition:opacity .3s ease;white-space:nowrap;pointer-events:none}
+        .h-hy:hover .h-hy-label,.h-hy.dragging .h-hy-label{opacity:1}
+        .h-hy:active{cursor:grabbing}
         @keyframes lnUp{to{transform:translateY(0)}}
         .h-statement{font-family:var(--disp);font-style:italic;font-size:clamp(1rem,1.8vw,1.3rem);color:var(--txd);line-height:1.6;max-width:600px;opacity:0;animation:fUp 1s ease 3.2s forwards}
         .h-meta{display:flex;gap:3rem;margin-top:3.5rem;opacity:0;animation:fUp 1s ease 3.5s forwards}
@@ -82,6 +89,11 @@
         .h-m::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--gold),transparent)}
         .h-m-l{font-family:var(--mono);font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;color:var(--txd);margin-bottom:.2rem}
         .h-m-v{font-size:.82rem;color:var(--tx);font-weight:400}
+        .brand-g{cursor:default}.bl{transition:color .3s ease;transition-delay:var(--bd,0ms)}.brand-g:hover .bl{color:var(--bc)}
+        .brand-ms{position:relative;cursor:default;transition:color .3s ease}.brand-ms:hover{color:#00A4EF}
+        .brand-ms::after{content:'';position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%) scale(0.8);width:12px;height:12px;background:linear-gradient(135deg,#F25022 0%,#F25022 48%,transparent 48%,transparent 52%,#7FBA00 52%,#7FBA00 100%),linear-gradient(225deg,#00A4EF 0%,#00A4EF 48%,transparent 48%,transparent 52%,#FFB900 52%,#FFB900 100%);background-size:100% 50%;background-position:top,bottom;background-repeat:no-repeat;opacity:0;transition:opacity .3s ease,transform .3s ease;border-radius:1px}
+        .brand-ms:hover::after{opacity:1;transform:translateY(-50%) scale(1)}
+        .brand-nv{cursor:default;transition:color .3s ease}.brand-nv:hover{color:#76B900}
         .h-scroll{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.6rem;opacity:0;animation:fUp .8s ease 3.8s forwards}
         .h-scroll-t{font-family:var(--mono);font-size:.52rem;letter-spacing:.4em;text-transform:uppercase;color:var(--txm)}
         .h-scroll-ln{width:1px;height:40px;position:relative;overflow:hidden}
@@ -332,6 +344,8 @@
             footer{flex-direction:column;gap:1rem;text-align:center}.h-scroll,.hud,.amb-toggle{display:none}
             .void-container{height:70vh}
             .void-fade-in,.void-fade-out{height:20vh}
+            .h-hy{pointer-events:none}.h-hy::before,.h-hy::after,.h-hy-label{display:none}
+            .brand-g.hover .bl{color:var(--bc)}.brand-ms.hover{color:#00A4EF}.brand-ms.hover::after{opacity:1;transform:translateY(-50%) scale(1)}.brand-nv.hover{color:#76B900}
         }
 
         /* THE FREQUENCY */
@@ -411,11 +425,11 @@
     <canvas id="heroCanvas"></canvas>
     <div class="hero-c">
         <div class="h-over">Currently building at Google</div>
-        <h1 class="h-name"><span class="ln"><span>Arnaud</span></span><span class="ln"><span>Saint-</span></span><span class="ln"><span><em>Pierre</em></span></span></h1>
+        <h1 class="h-name"><span class="ln"><span>Arnaud</span></span><span class="ln"><span>Saint<span class="h-hy" role="slider" aria-label="Master volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" tabindex="0">-<span class="h-hy-label">100%</span></span></span></span><span class="ln"><span><em>Pierre</em></span></span></h1>
         <p class="h-statement">I make things that are hard to make.<br>Systems that process billions of requests. Stories that don't let go.<br>Tools that turn feelings into colors.</p>
         <div class="h-meta">
-            <div class="h-m"><div class="h-m-l">Now</div><div class="h-m-v">Software Engineer @ Google</div></div>
-            <div class="h-m"><div class="h-m-l">Before</div><div class="h-m-v">Microsoft · NVIDIA</div></div>
+            <div class="h-m"><div class="h-m-l">Now</div><div class="h-m-v">Software Engineer @ <span class="brand-g"><span class="bl" style="--bc:#4285F4;--bd:0ms">G</span><span class="bl" style="--bc:#EA4335;--bd:40ms">o</span><span class="bl" style="--bc:#FBBC05;--bd:80ms">o</span><span class="bl" style="--bc:#4285F4;--bd:120ms">g</span><span class="bl" style="--bc:#34A853;--bd:160ms">l</span><span class="bl" style="--bc:#EA4335;--bd:200ms">e</span></span></div></div>
+            <div class="h-m"><div class="h-m-l">Before</div><div class="h-m-v"><span class="brand-ms">Microsoft</span> · <span class="brand-nv">NVIDIA</span></div></div>
             <div class="h-m"><div class="h-m-l">Studying</div><div class="h-m-v">Georgia Tech — M.S. Computer Science</div></div>
         </div>
         <div class="h-portrait"><img src="hero-portrait.jpg" alt="Arnaud Saint-Pierre" loading="eager"/></div>
@@ -649,6 +663,10 @@ function _getAC(){if(!_sac)_sac=new(window.AudioContext||window.webkitAudioConte
 document.addEventListener('click',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
 document.addEventListener('touchstart',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
 
+// GLOBAL MASTER GAIN — hyphen slider controls this
+var _globalMaster;
+function _getGlobalMaster(){if(!_globalMaster){var ac=_getAC();_globalMaster=ac.createGain();_globalMaster.gain.value=1;_globalMaster.connect(ac.destination)}return _globalMaster}
+
 // CURSOR
 const gl=document.getElementById('glow');let mx=innerWidth/2,my=innerHeight/2,gx=mx,gy=my;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
@@ -680,6 +698,24 @@ for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-p
 if(d<130){hx.beginPath();hx.moveTo(pts[i].x,pts[i].y);hx.lineTo(pts[j].x,pts[j].y);hx.strokeStyle=`rgba(205,162,78,${.035*(1-d/130)})`;hx.lineWidth=.5;hx.stroke()}}
 requestAnimationFrame(drawH)}drawH();
 new IntersectionObserver(function(es){hVis=es[0].isIntersecting;if(hVis&&!hRun)drawH()},{threshold:0}).observe(document.getElementById('hero'));
+
+// HYPHEN VOLUME SLIDER
+(function(){
+var hy=document.querySelector('.h-hy');if(!hy)return;
+var label=hy.querySelector('.h-hy-label');var dragging=false;var vol=1;
+function setVol(v){vol=Math.max(0,Math.min(1,v));hy.style.setProperty('--vol',vol);label.textContent=Math.round(vol*100)+'%';hy.setAttribute('aria-valuenow',Math.round(vol*100));if(_globalMaster)_globalMaster.gain.value=vol}
+function onMove(cx){var r=hy.getBoundingClientRect();var center=r.left+r.width/2;var off=cx-center;setVol(Math.max(0,Math.min(1,(off+30)/60)))}
+hy.addEventListener('mousedown',function(e){e.preventDefault();dragging=true;hy.classList.add('dragging');onMove(e.clientX)});
+document.addEventListener('mousemove',function(e){if(dragging)onMove(e.clientX)});
+document.addEventListener('mouseup',function(){if(dragging){dragging=false;hy.classList.remove('dragging')}});
+hy.addEventListener('touchstart',function(e){e.preventDefault();dragging=true;hy.classList.add('dragging');onMove(e.touches[0].clientX)},{passive:false});
+document.addEventListener('touchmove',function(e){if(dragging)onMove(e.touches[0].clientX)});
+document.addEventListener('touchend',function(){if(dragging){dragging=false;hy.classList.remove('dragging')}});
+hy.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();setVol(vol+0.05)}if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();setVol(vol-0.05)}});
+})();
+
+// BRAND COLOR MOBILE TOUCH
+if('ontouchstart' in window){document.querySelectorAll('.brand-g,.brand-ms,.brand-nv').forEach(function(el){el.addEventListener('touchstart',function(){el.classList.add('hover');setTimeout(function(){el.classList.remove('hover')},2000)})})}
 
 // TOGE CANVAS
 const tc=document.getElementById('togeCanvas'),tx=tc.getContext('2d');
@@ -964,7 +1000,7 @@ function initAudioContext(){
         dataArray=new Uint8Array(bufferLength);
         freqSource=audioCtx.createMediaElementSource(freqAudio);
         freqSource.connect(analyser);
-        analyser.connect(audioCtx.destination);
+        analyser.connect(_getGlobalMaster());
         analyserReady=true;
     }catch(e){
         analyser=null;analyserReady=false;
@@ -1523,7 +1559,7 @@ function getMaster(){
     var c=getAC();
     compressor=c.createDynamicsCompressor();
     compressor.threshold.value=-20;compressor.knee.value=10;compressor.ratio.value=4;
-    compressor.connect(c.destination);
+    compressor.connect(_getGlobalMaster());
     masterGain=c.createGain();masterGain.gain.value=0.8;
     masterGain.connect(compressor);
   }
@@ -2488,7 +2524,7 @@ if(ctx.state==='suspended')ctx.resume();
 // Master gain — overall volume, mute/duck control
 masterGain=ctx.createGain();
 masterGain.gain.value=0;
-masterGain.connect(ctx.destination);
+masterGain.connect(_getGlobalMaster());
 
 // Tonal crossfade gain
 tonalGain=ctx.createGain();
