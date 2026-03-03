@@ -2310,11 +2310,21 @@ var voidObs=new IntersectionObserver(function(entries){
       try{getAC();startAmbient();}catch(e){}
     }
     // Fade ambient audio when leaving
-    if(!voidVisible&&ambientPad&&ambientPad.padG&&ac){
-      try{ambientPad.padG.gain.linearRampToValueAtTime(0,ac.currentTime+2);}catch(e){}
+    if(!voidVisible&&ambientPad&&ac){
+      try{
+        ambientPad.padG.gain.setValueAtTime(ambientPad.padG.gain.value,ac.currentTime);
+        ambientPad.padG.gain.linearRampToValueAtTime(0,ac.currentTime+2);
+        ambientPad.ng.gain.setValueAtTime(ambientPad.ng.gain.value,ac.currentTime);
+        ambientPad.ng.gain.linearRampToValueAtTime(0,ac.currentTime+2);
+      }catch(e){}
     }
-    if(voidVisible&&ambientPad&&ambientPad.padG&&ac&&ambientStarted){
-      try{ambientPad.padG.gain.linearRampToValueAtTime(0.015,ac.currentTime+0.5);}catch(e){}
+    if(voidVisible&&ambientPad&&ac&&ambientStarted){
+      try{
+        ambientPad.padG.gain.setValueAtTime(ambientPad.padG.gain.value,ac.currentTime);
+        ambientPad.padG.gain.linearRampToValueAtTime(0.015,ac.currentTime+0.5);
+        ambientPad.ng.gain.setValueAtTime(ambientPad.ng.gain.value,ac.currentTime);
+        ambientPad.ng.gain.linearRampToValueAtTime(0.006,ac.currentTime+0.5);
+      }catch(e){}
     }
     // Hide debug when leaving
     if(!voidVisible&&voidDebug){voidDebug=false;if(voidDebugEl)voidDebugEl.classList.remove('active');}
