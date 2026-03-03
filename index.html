@@ -646,6 +646,16 @@
 <footer><p>© 2026 Arnaud Saint-Pierre</p><a href="#hero">↑ Top</a></footer>
 
 <script>
+// SHARED AUDIO CONTEXT — single instance for frequency, void, ambient (script-level for cross-IIFE access)
+var _sac;
+function _getAC(){if(!_sac)_sac=new(window.AudioContext||window.webkitAudioContext)();return _sac}
+document.addEventListener('click',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
+document.addEventListener('touchstart',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
+
+// GLOBAL MASTER GAIN — hyphen slider controls this
+var _globalMaster;
+function _getGlobalMaster(){if(!_globalMaster){var ac=_getAC();_globalMaster=ac.createGain();_globalMaster.gain.value=1;_globalMaster.connect(ac.destination)}return _globalMaster}
+
 (function(){
 'use strict';
 
@@ -656,16 +666,6 @@ setTimeout(()=>document.getElementById('loader').classList.add('done'),2600);
 var ldp=document.getElementById('ldPrime');var primeWords=['ENGINEER','CREATOR','ARCHITECT'];
 primeWords.forEach(function(w,i){setTimeout(function(){ldp.classList.remove('out');ldp.textContent=w;ldp.style.opacity='1'},i*700);setTimeout(function(){ldp.classList.add('out');ldp.style.opacity='0'},i*700+500)});
 setTimeout(function(){ldp.style.display='none'},2100);
-
-// SHARED AUDIO CONTEXT — single instance for frequency, void, ambient
-var _sac;
-function _getAC(){if(!_sac)_sac=new(window.AudioContext||window.webkitAudioContext)();return _sac}
-document.addEventListener('click',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
-document.addEventListener('touchstart',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
-
-// GLOBAL MASTER GAIN — hyphen slider controls this
-var _globalMaster;
-function _getGlobalMaster(){if(!_globalMaster){var ac=_getAC();_globalMaster=ac.createGain();_globalMaster.gain.value=1;_globalMaster.connect(ac.destination)}return _globalMaster}
 
 // CURSOR
 const gl=document.getElementById('glow');let mx=innerWidth/2,my=innerHeight/2,gx=mx,gy=my;
