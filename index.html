@@ -183,7 +183,8 @@
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
         .toge-core{background:#080505;padding:10rem 3rem;position:relative}
-        .toge-core::after{content:'';position:absolute;inset:0;z-index:1;background:url('img/toge_backdrop.png') center center/cover no-repeat;opacity:0.06;mix-blend-mode:lighten;pointer-events:none;mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%);transition:opacity 2s ease}
+        .toge-core::after{content:'';position:absolute;inset:0;z-index:1;opacity:0.06;mix-blend-mode:lighten;pointer-events:none;mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 50%,black 50%,transparent 90%);transition:opacity 2s ease}
+        .toge-core.toge-bg::after{background:url('img/toge_backdrop.jpg') center center/cover no-repeat}
         .toge-core.backdrop-reveal::after{opacity:0.09}
         #togeCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.5}
         .toge-vig{position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 50% 50%,transparent,rgba(8,5,5,.7));pointer-events:none;z-index:1}
@@ -652,6 +653,10 @@ const hudS=document.getElementById('hudSection');
 const secs={hero:'SECTION 00 / OVERVIEW',exp:'SECTION 01 / EXPERIENCE',work:'SECTION 02 / PROJECTS',voidZone:'',signal:'SECTION 03 / SIGNAL',toge:'TŌGE',freq:'SECTION 04 / FREQUENCY',contact:'SECTION 05 / CONNECT'};
 const zo=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const id=e.target.id;if(secs[id]!==undefined)hudS.textContent=secs[id];document.body.classList.remove('zone-toge','zone-signal','zone-contact','zone-void');if(id==='toge')document.body.classList.add('zone-toge');if(id==='signal')document.body.classList.add('zone-signal');if(id==='contact')document.body.classList.add('zone-contact');if(id==='voidZone')document.body.classList.add('zone-void')}})},{threshold:.15});
 ['hero','exp','work','voidZone','signal','toge','freq','contact'].forEach(id=>{const el=document.getElementById(id);if(el)zo.observe(el)});
+
+// LAZY LOAD — TŌGE backdrop
+var togeCore=document.querySelector('.toge-core');
+if(togeCore){var togeBgObs=new IntersectionObserver(function(es){if(es[0].isIntersecting){togeCore.classList.add('toge-bg');togeBgObs.disconnect()}},{rootMargin:'500px'});togeBgObs.observe(togeCore)}
 
 // HERO CANVAS
 const hc=document.getElementById('heroCanvas'),hx=hc.getContext('2d');
