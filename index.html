@@ -643,6 +643,12 @@ var ldp=document.getElementById('ldPrime');var primeWords=['ENGINEER','CREATOR',
 primeWords.forEach(function(w,i){setTimeout(function(){ldp.classList.remove('out');ldp.textContent=w;ldp.style.opacity='1'},i*700);setTimeout(function(){ldp.classList.add('out');ldp.style.opacity='0'},i*700+500)});
 setTimeout(function(){ldp.style.display='none'},2100);
 
+// SHARED AUDIO CONTEXT — single instance for frequency, void, ambient
+var _sac;
+function _getAC(){if(!_sac)_sac=new(window.AudioContext||window.webkitAudioContext)();return _sac}
+document.addEventListener('click',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
+document.addEventListener('touchstart',function(){if(_sac&&_sac.state==='suspended')_sac.resume()},{once:true});
+
 // CURSOR
 const gl=document.getElementById('glow');let mx=innerWidth/2,my=innerHeight/2,gx=mx,gy=my;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
@@ -956,7 +962,7 @@ let analyserReady=false;
 function initAudioContext(){
     if(analyserReady)return;
     try{
-        audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+        audioCtx=_getAC();
         if(audioCtx.state==='suspended')audioCtx.resume();
         analyser=audioCtx.createAnalyser();
         analyser.fftSize=512;
@@ -1521,7 +1527,7 @@ function getHue(t){
 }
 
 // ═══════ AUDIO ═══════
-function getAC(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac;}
+function getAC(){if(!ac)ac=_getAC();return ac;}
 
 function getMaster(){
   if(!masterGain){
@@ -2487,7 +2493,7 @@ ramp(2);
 function init(){
 if(started)return;
 try{
-ctx=new(window.AudioContext||window.webkitAudioContext)();
+ctx=_getAC();
 if(ctx.state==='suspended')ctx.resume();
 
 // Master gain — overall volume, mute/duck control
