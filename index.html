@@ -44,6 +44,7 @@
         .edge-bar-l{left:12px;height:49vh;opacity:0;box-shadow:0 0 12px rgba(205,162,78,.2)}
         .edge-bar-l.music-active{opacity:.35}
         .edge-bar.hover,.edge-bar.dragging{width:3px;opacity:.7;box-shadow:0 0 20px var(--zone-accent)}
+        .edge-bar.edge-inhale{width:6px!important;opacity:.7!important;box-shadow:0 0 25px var(--zone-accent)!important;transition:width .6s ease-in-out,opacity .6s ease-in-out,box-shadow .6s ease-in-out!important}
         .edge-waveform{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity .4s ease}
         .music-active .edge-waveform{opacity:1}
         .edge-label{position:fixed;z-index:9002;font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--zone-accent);pointer-events:none;opacity:0;transition:opacity .3s ease,color 1.5s ease;white-space:nowrap}
@@ -686,6 +687,7 @@ function _getEdgeAnalyser(){if(!_edgeAnalyser){var ac=_getAC();_edgeAnalyser=ac.
 // MUSIC STATE — exposed for edge system
 var _musicPlaying=false;
 var _startEdgeWaveforms;
+var _edgeBirthPulse;
 
 (function(){
 'use strict';
@@ -1164,7 +1166,7 @@ function playTrack(index){
     }
     freqAudio.play().then(()=>{
         isPlaying=true;currentTrackIndex=index;
-        _musicPlaying=true;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.add('music-active');if(_startEdgeWaveforms)_startEdgeWaveforms();
+        _musicPlaying=true;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.add('music-active');if(_startEdgeWaveforms)_startEdgeWaveforms();if(_edgeBirthPulse)_edgeBirthPulse();
         document.getElementById('freqName').textContent=track.name;
         document.getElementById('freqTag').textContent=track.tag;
         document.getElementById('freqPlay').textContent='\u275A\u275A';
@@ -1180,7 +1182,7 @@ function playTrack(index){
 
 document.getElementById('freqPlay').addEventListener('click',()=>{
     if(currentTrackIndex<0){playTrack(0);return}
-    if(freqAudio.paused){freqAudio.play().then(()=>{isPlaying=true;_musicPlaying=true;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.add('music-active');if(_startEdgeWaveforms)_startEdgeWaveforms();document.getElementById('freqPlay').textContent='\u275A\u275A';initAudioContext();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume()}).catch(()=>{})}
+    if(freqAudio.paused){freqAudio.play().then(()=>{isPlaying=true;_musicPlaying=true;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.add('music-active');if(_startEdgeWaveforms)_startEdgeWaveforms();if(_edgeBirthPulse)_edgeBirthPulse();document.getElementById('freqPlay').textContent='\u275A\u275A';initAudioContext();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume()}).catch(()=>{})}
     else{freqAudio.pause();isPlaying=false;_musicPlaying=false;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.remove('music-active');document.getElementById('freqPlay').textContent='\u25B6'}
 });
 
@@ -2761,6 +2763,25 @@ requestAnimationFrame(drawEdgeWaveforms);
 }
 
 _startEdgeWaveforms=function(){if(!edgeWaveRunning)drawEdgeWaveforms()};
+
+// BIRTH PULSE — one-time discovery hint on first song
+var birthPulseFired=false;
+_edgeBirthPulse=function(){
+if(birthPulseFired)return;
+birthPulseFired=true;
+setTimeout(function(){
+var bars=document.querySelectorAll('.edge-bar');
+bars.forEach(function(b){b.classList.add('edge-inhale')});
+var lbl=edges.master.label;
+lbl.textContent=Math.round(edges.master.vol*100)+'%';
+lbl.style.bottom=(15+edges.master.vol*70)+'vh';
+setTimeout(function(){lbl.classList.add('visible')},500);
+setTimeout(function(){
+bars.forEach(function(b){b.classList.remove('edge-inhale')});
+},1000);
+setTimeout(function(){lbl.classList.remove('visible')},3500);
+},500);
+};
 })();
 </script>
 </body>
