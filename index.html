@@ -21,6 +21,7 @@
             --body:'Outfit',sans-serif;
             --mono:'IBM Plex Mono',monospace;
             --freq-glow:rgba(205,162,78,.08);
+            --zone-accent:#CDA24E;
         }
         html{scroll-behavior:smooth}
         html{scrollbar-width:none;-ms-overflow-style:none}
@@ -31,6 +32,24 @@
 
         #glow{position:fixed;width:550px;height:550px;border-radius:50%;pointer-events:none;z-index:9998;background:radial-gradient(circle,rgba(205,162,78,.035) 0%,transparent 60%);transform:translate(-50%,-50%);will-change:left,top;transition:background .6s ease}
         body.zone-toge #glow{background:radial-gradient(circle,rgba(184,58,58,.035) 0%,transparent 60%)}
+        body.zone-toge{--zone-accent:#B83A3A}
+        body.zone-signal{--zone-accent:#EDE8DF}
+
+        /* EDGE VOLUME */
+        .edge-zone{position:fixed;top:0;width:25px;height:100vh;z-index:9001;cursor:default}
+        .edge-zone-r{right:0}.edge-zone-l{left:0}
+        .edge-zone:hover{cursor:ns-resize}
+        .edge-bar{position:fixed;bottom:15vh;width:1px;z-index:9000;pointer-events:none;background:var(--zone-accent);border-radius:.5px;transition:background 1.5s ease,box-shadow 1.5s ease,opacity .6s ease,width .2s ease}
+        .edge-bar-r{right:0;height:49vh;opacity:.2;box-shadow:0 0 8px var(--zone-accent)}
+        .edge-bar-l{left:0;height:49vh;opacity:0;box-shadow:0 0 8px var(--zone-accent)}
+        .edge-bar-l.music-active{opacity:.2}
+        .edge-bar.hover,.edge-bar.dragging{width:3px;opacity:.5;box-shadow:0 0 20px var(--zone-accent)}
+        .edge-waveform{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity .4s ease}
+        .music-active .edge-waveform{opacity:1}
+        .edge-label{position:fixed;z-index:9002;font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--zone-accent);pointer-events:none;opacity:0;transition:opacity .3s ease,color 1.5s ease;white-space:nowrap}
+        .edge-label-r{right:8px}.edge-label-l{left:8px}
+        .edge-label.visible{opacity:1}
+        body.zone-void .edge-bar,body.zone-void .edge-zone{opacity:0!important;pointer-events:none}
 
         .hud{position:fixed;z-index:99;pointer-events:none;font-family:var(--mono);font-size:.46rem;letter-spacing:.15em;color:var(--txm);opacity:.3}
         .hud-tl{top:5rem;left:1.5rem}.hud-tr{top:5rem;right:1.5rem;text-align:right}.hud-bl{bottom:1.5rem;left:1.5rem}.hud-br{bottom:1.5rem;right:1.5rem;text-align:right}
@@ -337,6 +356,7 @@
             footer{flex-direction:column;gap:1rem;text-align:center}.h-scroll,.hud,.amb-toggle{display:none}
             .void-container{height:70vh}
             .void-fade-in,.void-fade-out{height:20vh}
+            .edge-zone{width:30px}
             .brand-g.hover .bl{color:var(--bc)}.brand-ms.hover{color:#00A4EF}.brand-ms.hover::after{opacity:1;transform:translateY(-50%) scale(1)}.brand-nv.hover{color:#76B900}
         }
 
@@ -402,6 +422,13 @@
 <div class="hud hud-bl">37.0000°N 122.0590°W</div>
 <div class="hud hud-br">CLEARANCE: PUBLIC</div>
 <div class="amb-toggle" id="ambToggle" aria-label="Toggle ambient sound"><svg viewBox="0 0 12 10" width="12" height="10"><circle cx="2" cy="5" r="1"/><path d="M5 2.5Q8 5 5 7.5"/><path d="M7.5 0.5Q11.5 5 7.5 9.5"/></svg></div>
+
+<div class="edge-zone edge-zone-r"></div>
+<div class="edge-bar edge-bar-r"><canvas class="edge-waveform" width="4" height="800"></canvas></div>
+<div class="edge-label edge-label-r"></div>
+<div class="edge-zone edge-zone-l"></div>
+<div class="edge-bar edge-bar-l"><canvas class="edge-waveform" width="4" height="800"></canvas></div>
+<div class="edge-label edge-label-l"></div>
 
 <div id="ko"></div>
 <div id="konami"><h3>You Found It</h3><p>If you're reading this, you're the type<br/>who looks deeper. I respect that.<br/><br/>The best things are hidden in plain sight.<br/>— Arnaud</p><div class="close-k" onclick="document.getElementById('konami').classList.remove('show');document.getElementById('ko').classList.remove('show')">[ close ]</div></div>
@@ -647,6 +674,18 @@ document.addEventListener('touchstart',function(){if(_sac&&_sac.state==='suspend
 // GLOBAL MASTER GAIN — edge volume controls this
 var _globalMaster;
 function _getGlobalMaster(){if(!_globalMaster){var ac=_getAC();_globalMaster=ac.createGain();_globalMaster.gain.value=1;_globalMaster.connect(ac.destination)}return _globalMaster}
+
+// MUSIC GAIN — left edge controls this, freq player only
+var _musicGain;
+function _getMusicGain(){if(!_musicGain){var ac=_getAC();_musicGain=ac.createGain();_musicGain.gain.value=0.7;_musicGain.connect(_getGlobalMaster())}return _musicGain}
+
+// EDGE ANALYSER — low-res FFT for edge waveform
+var _edgeAnalyser;
+function _getEdgeAnalyser(){if(!_edgeAnalyser){var ac=_getAC();_edgeAnalyser=ac.createAnalyser();_edgeAnalyser.fftSize=128}return _edgeAnalyser}
+
+// MUSIC STATE — exposed for edge system
+var _musicPlaying=false;
+var _startEdgeWaveforms;
 
 (function(){
 'use strict';
@@ -980,7 +1019,8 @@ function initAudioContext(){
         dataArray=new Uint8Array(bufferLength);
         freqSource=audioCtx.createMediaElementSource(freqAudio);
         freqSource.connect(analyser);
-        analyser.connect(_getGlobalMaster());
+        analyser.connect(_getMusicGain());
+        analyser.connect(_getEdgeAnalyser());
         analyserReady=true;
     }catch(e){
         analyser=null;analyserReady=false;
@@ -1124,6 +1164,7 @@ function playTrack(index){
     }
     freqAudio.play().then(()=>{
         isPlaying=true;currentTrackIndex=index;
+        _musicPlaying=true;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.add('music-active');if(_startEdgeWaveforms)_startEdgeWaveforms();
         document.getElementById('freqName').textContent=track.name;
         document.getElementById('freqTag').textContent=track.tag;
         document.getElementById('freqPlay').textContent='\u275A\u275A';
@@ -1139,8 +1180,8 @@ function playTrack(index){
 
 document.getElementById('freqPlay').addEventListener('click',()=>{
     if(currentTrackIndex<0){playTrack(0);return}
-    if(freqAudio.paused){freqAudio.play().then(()=>{isPlaying=true;document.getElementById('freqPlay').textContent='\u275A\u275A';initAudioContext();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume()}).catch(()=>{})}
-    else{freqAudio.pause();isPlaying=false;document.getElementById('freqPlay').textContent='\u25B6'}
+    if(freqAudio.paused){freqAudio.play().then(()=>{isPlaying=true;_musicPlaying=true;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.add('music-active');if(_startEdgeWaveforms)_startEdgeWaveforms();document.getElementById('freqPlay').textContent='\u275A\u275A';initAudioContext();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume()}).catch(()=>{})}
+    else{freqAudio.pause();isPlaying=false;_musicPlaying=false;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.remove('music-active');document.getElementById('freqPlay').textContent='\u25B6'}
 });
 
 document.getElementById('freqNext').addEventListener('click',()=>{
@@ -1189,6 +1230,7 @@ freqAudio.addEventListener('ended',()=>{
 
 function switchTab(side){
     currentSide=side;currentTrackIndex=-1;isPlaying=false;
+    _musicPlaying=false;var _ebl=document.querySelector('.edge-bar-l');if(_ebl)_ebl.classList.remove('music-active');
     freqAudio.pause();
     document.getElementById('freqName').textContent='\u2014';
     document.getElementById('freqTag').textContent='';
@@ -2603,6 +2645,122 @@ masterGain.gain.linearRampToValueAtTime(tgt(),t2+1);
 }
 });
 
+})();
+
+// EDGE VOLUME — stereo waveform bars
+(function(){
+var edges={
+master:{zone:document.querySelector('.edge-zone-r'),bar:document.querySelector('.edge-bar-r'),label:document.querySelector('.edge-label-r'),canvas:document.querySelector('.edge-bar-r .edge-waveform'),vol:1,getGain:function(){return _getGlobalMaster()}},
+music:{zone:document.querySelector('.edge-zone-l'),bar:document.querySelector('.edge-bar-l'),label:document.querySelector('.edge-label-l'),canvas:document.querySelector('.edge-bar-l .edge-waveform'),vol:0.7,getGain:function(){return _getMusicGain()}}
+};
+
+function updateBar(e){
+var h=Math.max(10,e.vol*70);
+e.bar.style.height=h+'vh';
+var pct=Math.round(e.vol*100);
+e.label.textContent=pct+'%';
+var barRect=e.bar.getBoundingClientRect();
+e.label.style.bottom=(barRect.height+8)+'px';
+}
+updateBar(edges.master);
+updateBar(edges.music);
+
+function setVol(e,v){
+v=Math.max(0,Math.min(1,v));
+e.vol=v;
+try{var g=e.getGain();var ac=_getAC();var t=ac.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(v,t+0.05)}catch(ex){}
+updateBar(e);
+}
+
+function setupEdge(key){
+var e=edges[key];
+if(!e.zone||!e.bar)return;
+var dragging=false,startY=0,startVol=0;
+
+function onDown(y){dragging=true;startY=y;startVol=e.vol;e.bar.classList.add('dragging');e.label.classList.add('visible')}
+function onMove(y){if(!dragging)return;var delta=(startY-y)/(window.innerHeight*0.7);setVol(e,startVol+delta)}
+function onUp(){if(!dragging)return;dragging=false;e.bar.classList.remove('dragging');e.label.classList.remove('visible')}
+
+e.zone.addEventListener('mousedown',function(ev){ev.preventDefault();onDown(ev.clientY)});
+document.addEventListener('mousemove',function(ev){if(dragging)onMove(ev.clientY)});
+document.addEventListener('mouseup',onUp);
+
+e.zone.addEventListener('touchstart',function(ev){ev.preventDefault();onDown(ev.touches[0].clientY)},{passive:false});
+document.addEventListener('touchmove',function(ev){if(dragging){ev.preventDefault();onMove(ev.touches[0].clientY)}},{passive:false});
+document.addEventListener('touchend',onUp);
+
+e.zone.addEventListener('mouseenter',function(){e.bar.classList.add('hover');e.label.classList.add('visible');updateBar(e)});
+e.zone.addEventListener('mouseleave',function(){if(!dragging){e.bar.classList.remove('hover');e.label.classList.remove('visible')}});
+
+e.zone.setAttribute('tabindex','0');
+e.zone.addEventListener('keydown',function(ev){
+if(ev.key==='ArrowUp'){ev.preventDefault();setVol(e,e.vol+0.05)}
+if(ev.key==='ArrowDown'){ev.preventDefault();setVol(e,e.vol-0.05)}
+});
+}
+setupEdge('master');
+setupEdge('music');
+
+// WAVEFORM VISUALIZATION
+var edgeData=null,edgeBufLen=0,edgeWaveRunning=false;
+var ZONE_RGB={'default':[205,162,78],'zone-toge':[184,58,58],'zone-signal':[237,232,223]};
+
+function getZoneRGB(){
+var cl=document.body.classList;
+if(cl.contains('zone-toge'))return ZONE_RGB['zone-toge'];
+if(cl.contains('zone-signal'))return ZONE_RGB['zone-signal'];
+return ZONE_RGB['default'];
+}
+
+function drawEdgeWaveforms(){
+if(!_musicPlaying){
+edgeWaveRunning=false;
+['master','music'].forEach(function(k){
+var c=edges[k].canvas;
+if(c){var cx=c.getContext('2d');cx.clearRect(0,0,c.width,c.height)}
+edges[k].bar.style.boxShadow='';
+});
+return;
+}
+edgeWaveRunning=true;
+if(!_edgeAnalyser){requestAnimationFrame(drawEdgeWaveforms);return}
+if(!edgeData){edgeBufLen=_edgeAnalyser.frequencyBinCount;edgeData=new Uint8Array(edgeBufLen)}
+_edgeAnalyser.getByteFrequencyData(edgeData);
+var zc=getZoneRGB();
+
+var bassSum=0;
+for(var i=0;i<9&&i<edgeBufLen;i++)bassSum+=edgeData[i]/255;
+var bassE=bassSum/9;
+var glowSz=8+bassE*25;
+
+edges.master.bar.style.boxShadow='0 0 '+glowSz+'px rgba('+zc[0]+','+zc[1]+','+zc[2]+','+(.08+bassE*.12)+')';
+if(edges.music.bar.classList.contains('music-active')){
+edges.music.bar.style.boxShadow='0 0 '+glowSz+'px rgba('+zc[0]+','+zc[1]+','+zc[2]+','+(.15+bassE*.2)+')';
+}
+
+['master','music'].forEach(function(k){
+var c=edges[k].canvas;
+if(!c)return;
+if(k==='music'&&!edges.music.bar.classList.contains('music-active'))return;
+var cx=c.getContext('2d');
+c.height=edges[k].bar.clientHeight||800;
+c.width=4;
+cx.clearRect(0,0,4,c.height);
+var segH=c.height/edgeBufLen;
+for(var j=0;j<edgeBufLen;j++){
+var val=edgeData[j]/255;
+var y=c.height-((j+1)*segH);
+var w=1+val*3;
+var a=0.1+val*0.7;
+cx.fillStyle='rgba('+zc[0]+','+zc[1]+','+zc[2]+','+a+')';
+cx.fillRect((4-w)/2,y,w,segH);
+if(val>0.5){cx.fillStyle='rgba('+zc[0]+','+zc[1]+','+zc[2]+','+(val*0.3)+')';cx.fillRect(0,y,4,segH)}
+}
+});
+requestAnimationFrame(drawEdgeWaveforms);
+}
+
+_startEdgeWaveforms=function(){if(!edgeWaveRunning)drawEdgeWaveforms()};
 })();
 </script>
 </body>
