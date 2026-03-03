@@ -1185,11 +1185,13 @@ function renderTrackList(tracks,side){
         return;
     }
     list.innerHTML=tracks.map((t,i)=>'<div class="freq-track'+(i===currentTrackIndex&&currentSide===side?' active':'')+'" data-index="'+i+'"><span class="freq-track-num">'+String(i+1).padStart(2,'0')+'</span><div class="freq-track-body"><div class="freq-track-name">'+t.name+'</div><div class="freq-track-tag">'+t.tag+'</div></div><span class="freq-track-dur">'+(t.duration||'')+'</span></div>').join('');
-    list.querySelectorAll('.freq-track').forEach(el=>{
-        el.addEventListener('click',()=>playTrack(parseInt(el.dataset.index)));
-    });
 }
 
+// Event delegation — one listener, no stacking
+document.getElementById('freqList').addEventListener('click',function(e){
+    var tr=e.target.closest('.freq-track');
+    if(tr&&tr.dataset.index)playTrack(parseInt(tr.dataset.index));
+});
 document.getElementById('freqTabEng').addEventListener('click',()=>switchTab('pink'));
 document.getElementById('freqTabCur').addEventListener('click',()=>switchTab('blue'));
 
