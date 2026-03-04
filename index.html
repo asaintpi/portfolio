@@ -1522,8 +1522,6 @@ var voidFpsLast=0;
 var voidFpsVal=0;
 
 var ac=null;
-var ambientStarted=false;
-var ambientPad=null;
 var masterGain=null;
 var compressor=null;
 var gatherVoices=[];
@@ -1590,29 +1588,6 @@ function getMaster(){
   return masterGain;
 }
 
-function startAmbient(){
-  if(ambientStarted)return;
-  try{
-    var c=getAC();var m=getMaster();
-    var bufSz=c.sampleRate*2;
-    var buf=c.createBuffer(1,bufSz,c.sampleRate);
-    var d=buf.getChannelData(0);
-    for(var i=0;i<bufSz;i++)d[i]=Math.random()*2-1;
-    var noise=c.createBufferSource();noise.buffer=buf;noise.loop=true;
-    var nf=c.createBiquadFilter();nf.type='bandpass';nf.frequency.value=350;nf.Q.value=0.4;
-    var ng=c.createGain();ng.gain.value=0.018;
-    noise.connect(nf);nf.connect(ng);ng.connect(m);noise.start();
-    var padFreqs=[65.4,98.0,130.8];
-    var padG=c.createGain();padG.gain.value=0.045;
-    var lfo=c.createOscillator();lfo.type='sine';lfo.frequency.value=0.06;
-    var lfoG=c.createGain();lfoG.gain.value=0.015;
-    lfo.connect(lfoG);lfoG.connect(padG.gain);
-    var padOscs=padFreqs.map(function(f){var o=c.createOscillator();o.type='sine';o.frequency.value=f;o.connect(padG);o.start();return o;});
-    padG.connect(m);lfo.start();
-    ambientPad={noise:noise,nf:nf,ng:ng,padOscs:padOscs,padG:padG,lfo:lfo,lfoG:lfoG};
-    ambientStarted=true;
-  }catch(e){}
-}
 
 function playChime(freq,vol,dur){
   try{
@@ -1733,7 +1708,7 @@ function enterVoid(){
   voidIdleReturned=false;
   voidLastMouseTime=performance.now();
   if(voidHome)voidHome.classList.add('hidden');
-  getAC();startAmbient();
+  getAC();
 }
 function getHomeLine(){
   if(discoveryCount===0&&best===0)return'Touch the silence.';
@@ -2392,27 +2367,7 @@ var voidObs=new IntersectionObserver(function(entries){
     if(voidVisible&&!voidInitialized){initVoid();voidInitialized=true;}
     if(voidVisible&&!voidAnimFrame){prev=performance.now();voidAnimFrame=requestAnimationFrame(voidLoop);}
     if(!voidVisible&&voidAnimFrame){cancelAnimationFrame(voidAnimFrame);voidAnimFrame=null;}
-    // Start ambient on viewport entry (subliminal — no click needed)
-    if(voidVisible&&!ambientStarted){
-      try{getAC();startAmbient();}catch(e){}
-    }
-    // Fade ambient audio when leaving
-    if(!voidVisible&&ambientPad&&ac){
-      try{
-        ambientPad.padG.gain.setValueAtTime(ambientPad.padG.gain.value,ac.currentTime);
-        ambientPad.padG.gain.linearRampToValueAtTime(0,ac.currentTime+2);
-        ambientPad.ng.gain.setValueAtTime(ambientPad.ng.gain.value,ac.currentTime);
-        ambientPad.ng.gain.linearRampToValueAtTime(0,ac.currentTime+2);
-      }catch(e){}
-    }
-    if(voidVisible&&ambientPad&&ac&&ambientStarted){
-      try{
-        ambientPad.padG.gain.setValueAtTime(ambientPad.padG.gain.value,ac.currentTime);
-        ambientPad.padG.gain.linearRampToValueAtTime(0.015,ac.currentTime+0.5);
-        ambientPad.ng.gain.setValueAtTime(ambientPad.ng.gain.value,ac.currentTime);
-        ambientPad.ng.gain.linearRampToValueAtTime(0.006,ac.currentTime+0.5);
-      }catch(e){}
-    }
+    // Ambient now starts on first interaction (see initAmb listeners below)
     // Hide debug when leaving
     if(!voidVisible&&voidDebug){voidDebug=false;if(voidDebugEl)voidDebugEl.classList.remove('active');}
   });
