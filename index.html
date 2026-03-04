@@ -1600,12 +1600,12 @@ function startAmbient(){
     for(var i=0;i<bufSz;i++)d[i]=Math.random()*2-1;
     var noise=c.createBufferSource();noise.buffer=buf;noise.loop=true;
     var nf=c.createBiquadFilter();nf.type='bandpass';nf.frequency.value=350;nf.Q.value=0.4;
-    var ng=c.createGain();ng.gain.value=0.006;
+    var ng=c.createGain();ng.gain.value=0.018;
     noise.connect(nf);nf.connect(ng);ng.connect(m);noise.start();
     var padFreqs=[65.4,98.0,130.8];
-    var padG=c.createGain();padG.gain.value=0.015;
+    var padG=c.createGain();padG.gain.value=0.045;
     var lfo=c.createOscillator();lfo.type='sine';lfo.frequency.value=0.06;
-    var lfoG=c.createGain();lfoG.gain.value=0.005;
+    var lfoG=c.createGain();lfoG.gain.value=0.015;
     lfo.connect(lfoG);lfoG.connect(padG.gain);
     var padOscs=padFreqs.map(function(f){var o=c.createOscillator();o.type='sine';o.frequency.value=f;o.connect(padG);o.start();return o;});
     padG.connect(m);lfo.start();
