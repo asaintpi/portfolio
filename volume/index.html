@@ -731,36 +731,37 @@ transition: color .3s;
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
 
-    // 0–100: quiet hum that grows — you're turning a volume knob, there should be sound
+    // 0–100: hum that grows — you're turning a volume knob, there should be sound
     if (vol < 100) {
       const t = vol / 100;
-      gain.gain.setTargetAtTime(t * 0.08, now, 0.1);
-      osc.frequency.setTargetAtTime(150 + t * 30, now, 0.1);
-      osc2Gain.gain.setTargetAtTime(0, now, 0.1);
-    // 100–300: it's past max, sound gets uneasy
+      gain.gain.setTargetAtTime(t * 0.35, now, 0.1);
+      osc.frequency.setTargetAtTime(200 + t * 60, now, 0.1);
+      osc2Gain.gain.setTargetAtTime(t * 0.1, now, 0.1);
+      osc2.frequency.setTargetAtTime(400 + t * 50, now, 0.1);
+    // 100–300: past max, sound gets uneasy
     } else if (vol < 300) {
       const t = (vol - 100) / 200;
-      gain.gain.setTargetAtTime(0.08 + t * 0.07, now, 0.1);
-      osc.frequency.setTargetAtTime(180 + t * 60, now, 0.1);
-      osc2Gain.gain.setTargetAtTime(t * 0.03, now, 0.1);
-      osc2.frequency.setTargetAtTime(300 + t * 50, now, 0.1);
+      gain.gain.setTargetAtTime(0.35 + t * 0.15, now, 0.1);
+      osc.frequency.setTargetAtTime(260 + t * 80, now, 0.1);
+      osc2Gain.gain.setTargetAtTime(0.1 + t * 0.1, now, 0.1);
+      osc2.frequency.setTargetAtTime(450 + t * 80, now, 0.1);
     // 300–600: building dread, pitch climbing
     } else if (vol < 600) {
       const t = (vol - 300) / 300;
-      gain.gain.setTargetAtTime(0.15 + t * 0.1, now, 0.1);
-      osc.frequency.setTargetAtTime(240 + t * 160, now, 0.1);
-      osc2Gain.gain.setTargetAtTime(0.03 + t * 0.06, now, 0.1);
-      osc2.frequency.setTargetAtTime(350 + t * 150, now, 0.1);
-      lfoGain.gain.value = t * 0.02;
+      gain.gain.setTargetAtTime(0.5 + t * 0.2, now, 0.1);
+      osc.frequency.setTargetAtTime(340 + t * 200, now, 0.1);
+      osc2Gain.gain.setTargetAtTime(0.2 + t * 0.15, now, 0.1);
+      osc2.frequency.setTargetAtTime(530 + t * 200, now, 0.1);
+      lfoGain.gain.value = t * 0.06;
       lfo.frequency.setTargetAtTime(4 + t * 8, now, 0.2);
     // 600+: full chaos, warbling, unstable
     } else {
       const t = Math.min((vol - 600) / 400, 1);
-      gain.gain.setTargetAtTime(0.25 + t * 0.15, now, 0.1);
-      osc.frequency.setTargetAtTime(400 + t * 300 + Math.random() * t * 60, now, 0.05);
-      osc2Gain.gain.setTargetAtTime(0.09 + t * 0.08, now, 0.1);
-      osc2.frequency.setTargetAtTime(500 + t * 400 + Math.random() * t * 80, now, 0.05);
-      lfoGain.gain.value = 0.02 + t * 0.05;
+      gain.gain.setTargetAtTime(0.7 + t * 0.3, now, 0.1);
+      osc.frequency.setTargetAtTime(540 + t * 360 + Math.random() * t * 80, now, 0.05);
+      osc2Gain.gain.setTargetAtTime(0.35 + t * 0.2, now, 0.1);
+      osc2.frequency.setTargetAtTime(730 + t * 500 + Math.random() * t * 100, now, 0.05);
+      lfoGain.gain.value = 0.06 + t * 0.1;
       lfo.frequency.setTargetAtTime(12 + t * 20, now, 0.1);
     }
   }
