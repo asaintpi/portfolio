@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>VOLUME</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Libre+Caslon+Display&family=Inter:wght@300;400&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+--bg: #060606;
+--surface: #0c0c0c;
+--text: #e8e8e3;
+--dim: rgba(255,255,255,0.2);
+--ghost: rgba(255,255,255,0.06);
+--accent: #c9a84c;
+--accent-dim: rgba(201,168,76,0.15);
+--red: #e03030;
+--red-dim: rgba(224,48,48,0.15);
+--mono: 'Space Mono', monospace;
+--serif: 'Libre Caslon Display', serif;
+--sans: 'Inter', sans-serif;
+}
+
+html, body {
+width: 100%; height: 100%;
+overflow: hidden;
+background: var(--bg);
+color: var(--text);
+font-family: var(--mono);
+cursor: default;
+user-select: none;
+-webkit-user-select: none;
+-webkit-tap-highlight-color: transparent;
+}
+
+/* ── GRAIN ── */
+body::after {
+content: '';
+position: fixed;
+top: -50%; left: -50%;
+width: 200%; height: 200%;
+background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+pointer-events: none;
+z-index: 999;
+opacity: 0.6;
+}
+
+/* ── AMBIENT CANVAS ── */
+#canvas-bg {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+z-index: 0;
+}
+
+/* ── CONTAINER ── */
+.container {
+position: relative;
+z-index: 1;
+width: 100%; height: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+transition: transform 0.04s;
+}
+
+/* ── THE KNOB ── */
+.knob-zone {
+position: relative;
+width: 220px;
+height: 220px;
+margin-bottom: 28px;
+}
+
+.knob-ring {
+position: absolute;
+top: 0; left: 0;
+width: 100%; height: 100%;
+}
+
+.knob-ring svg {
+width: 100%; height: 100%;
+transform: rotate(-135deg);
+}
+
+.knob-ring .track {
+fill: none;
+stroke: rgba(255,255,255,0.04);
+stroke-width: 1.5;
+}
+
+.knob-ring .fill {
+fill: none;
+stroke: var(--accent);
+stroke-width: 2;
+stroke-linecap: round;
+stroke-dasharray: 471.24; /* 270deg of r=100 circle ≈ 75% of 2πr */
+stroke-dashoffset: 471.24;
+transition: stroke 0.4s;
+filter: drop-shadow(0 0 4px var(--accent-dim));
+}
+
+/* Tick marks via SVG */
+.knob-ticks {
+position: absolute;
+top: 0; left: 0;
+width: 100%; height: 100%;
+pointer-events: none;
+}
+
+.knob-body {
+position: absolute;
+top: 18px; left: 18px;
+width: 184px; height: 184px;
+border-radius: 50%;
+background:
+radial-gradient(ellipse at 38% 32%, #222, #0e0e0e 60%, #090909);
+border: 1px solid rgba(255,255,255,0.03);
+box-shadow:
+0 2px 40px rgba(0,0,0,0.9),
+inset 0 1px 0 rgba(255,255,255,0.03),
+inset 0 -2px 6px rgba(0,0,0,0.4);
+cursor: grab;
+will-change: transform;
+}
+
+.knob-body:active { cursor: grabbing; }
+
+.knob-dot {
+position: absolute;
+top: 16px;
+left: 50%;
+width: 4px; height: 4px;
+margin-left: -2px;
+border-radius: 50%;
+background: var(--accent);
+box-shadow: 0 0 6px rgba(201,168,76,0.6);
+transition: background 0.4s, box-shadow 0.4s;
+}
+
+.knob-glow {
+position: absolute;
+top: -30px; left: -30px;
+width: 280px; height: 280px;
+border-radius: 50%;
+background: radial-gradient(circle, var(--accent-dim), transparent 65%);
+pointer-events: none;
+opacity: 0;
+transition: opacity 0.4s;
+}
+
+/* ── READOUT ── */
+.readout {
+text-align: center;
+position: relative;
+}
+
+.readout-number {
+font-family: var(--mono);
+font-size: 52px;
+font-weight: 700;
+letter-spacing: -3px;
+line-height: 1;
+color: var(--text);
+transition: color 0.2s;
+position: relative;
+min-width: 160px;
+display: inline-block;
+}
+
+.readout-label {
+font-family: var(--mono);
+font-size: 9px;
+letter-spacing: 5px;
+text-transform: uppercase;
+color: var(--dim);
+margin-top: 6px;
+}
+
+.readout-sublabel {
+font-family: var(--sans);
+font-size: 10px;
+font-weight: 300;
+color: rgba(255,255,255,0.08);
+margin-top: 14px;
+letter-spacing: 0.5px;
+opacity: 0;
+transition: opacity 0.6s;
+}
+
+/* ── COMMENTARY ── */
+.msg {
+position: fixed;
+font-family: var(--sans);
+font-size: 13px;
+font-weight: 300;
+color: rgba(255,255,255,0.3);
+pointer-events: none;
+max-width: 280px;
+text-align: center;
+z-index: 10;
+opacity: 0;
+transform: translateY(6px);
+transition: opacity 0.5s ease, transform 0.5s ease;
+letter-spacing: 0.2px;
+line-height: 1.5;
+}
+
+.msg.show {
+opacity: 1;
+transform: translateY(0);
+}
+
+/* ── GLITCH TEXT ── */
+.glitch {
+position: fixed;
+font-family: var(--mono);
+font-size: 12px;
+pointer-events: none;
+white-space: nowrap;
+z-index: 5;
+opacity: 0;
+}
+
+/* ── OVERFLOW ── */
+.overflow {
+position: fixed;
+font-family: var(--mono);
+font-size: 14px;
+color: rgba(255,255,255,0.04);
+pointer-events: none;
+white-space: nowrap;
+z-index: 2;
+line-height: 1.6;
+}
+
+/* ── PLEA ── */
+.plea {
+position: fixed;
+font-family: var(--serif);
+font-style: italic;
+font-size: 17px;
+color: rgba(255,255,255,0.1);
+pointer-events: none;
+z-index: 8;
+text-align: center;
+max-width: 380px;
+line-height: 1.7;
+letter-spacing: 0.3px;
+opacity: 0;
+transition: opacity 1.2s ease;
+}
+
+.plea.show { opacity: 1; }
+
+/* ── SCREEN FX ── */
+.scanlines {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+pointer-events: none;
+z-index: 100;
+opacity: 0;
+background: repeating-linear-gradient(
+0deg,
+transparent, transparent 2px,
+rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px
+);
+transition: opacity 0.6s;
+}
+
+.vignette {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+pointer-events: none;
+z-index: 99;
+background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.75) 100%);
+opacity: 0;
+transition: opacity 0.6s;
+}
+
+.flash-layer {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+pointer-events: none;
+z-index: 150;
+background: white;
+opacity: 0;
+}
+
+/* ── ERRORS ── */
+.err-layer {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+pointer-events: none;
+z-index: 50;
+}
+
+.err {
+position: absolute;
+background: rgba(12,0,0,0.92);
+border: 1px solid rgba(224,48,48,0.2);
+padding: 10px 14px;
+font-family: var(--mono);
+font-size: 10px;
+color: rgba(224,80,80,0.7);
+max-width: 300px;
+line-height: 1.5;
+backdrop-filter: blur(2px);
+-webkit-backdrop-filter: blur(2px);
+}
+
+.err-title {
+color: var(--red);
+font-weight: 700;
+font-size: 9px;
+letter-spacing: 2px;
+margin-bottom: 3px;
+}
+
+/* ── CRACKS ── */
+.crack-layer {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+pointer-events: none;
+z-index: 97;
+opacity: 0;
+transition: opacity 0.4s;
+}
+
+.crack {
+position: absolute;
+height: 1px;
+background: rgba(255,255,255,0.035);
+transform-origin: left center;
+}
+
+/* ── ENDING ── */
+.ending {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+z-index: 200;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-direction: column;
+background: var(--bg);
+opacity: 0;
+pointer-events: none;
+transition: opacity 2.5s ease;
+}
+
+.ending.on {
+opacity: 1;
+pointer-events: auto;
+}
+
+.ending-line {
+font-family: var(--serif);
+font-size: 19px;
+color: rgba(255,255,255,0.5);
+text-align: center;
+line-height: 2.2;
+letter-spacing: 0.5px;
+opacity: 0;
+transform: translateY(8px);
+}
+
+.ending-line.in {
+opacity: 1;
+transform: translateY(0);
+transition: opacity 1s ease, transform 1s ease;
+}
+
+.ending-reset {
+font-family: var(--mono);
+font-size: 9px;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: rgba(255,255,255,0.1);
+cursor: pointer;
+margin-top: 48px;
+opacity: 0;
+transition: opacity 1s, color 0.3s;
+padding: 8px 16px;
+}
+
+.ending-reset:hover { color: rgba(255,255,255,0.3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+.knob-zone { width: 170px; height: 170px; }
+.knob-body { top: 14px; left: 14px; width: 142px; height: 142px; }
+.knob-glow { top: -24px; left: -24px; width: 218px; height: 218px; }
+.knob-dot { top: 13px; }
+.readout-number { font-size: 40px; }
+.msg { font-size: 12px; max-width: 240px; }
+.plea { font-size: 15px; max-width: 300px; }
+}
+
+@media (max-width: 380px) {
+.knob-zone { width: 140px; height: 140px; }
+.knob-body { top: 12px; left: 12px; width: 116px; height: 116px; }
+.readout-number { font-size: 34px; }
+}
+</style>
+
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<div class="container" id="container">
+  <div class="knob-zone" id="knob-zone">
+    <div class="knob-ring">
+      <svg viewBox="0 0 220 220">
+        <circle class="track" cx="110" cy="110" r="100"
+                fill="none" stroke-dasharray="471.24"
+                stroke-dashoffset="117.81"
+                transform="rotate(0 110 110)"/>
+        <circle class="fill" id="ring-fill" cx="110" cy="110" r="100"/>
+      </svg>
+    </div>
+    <div class="knob-body" id="knob">
+      <div class="knob-dot" id="knob-dot"></div>
+    </div>
+    <div class="knob-glow" id="knob-glow"></div>
+  </div>
+
+  <div class="readout">
+    <div class="readout-number" id="readout">0</div>
+    <div class="readout-label" id="label">VOLUME</div>
+    <div class="readout-sublabel" id="sublabel">drag upward to increase</div>
+  </div>
+</div>
+
+<div class="scanlines" id="scanlines"></div>
+<div class="vignette" id="vignette"></div>
+<div class="flash-layer" id="flash"></div>
+<div class="err-layer" id="err-layer"></div>
+<div class="crack-layer" id="crack-layer"></div>
+
+<div class="ending" id="ending">
+  <div id="ending-lines"></div>
+  <div class="ending-reset" id="ending-reset">again</div>
+</div>
+
+<script>
+(() => {
+  // ═══════════════════════════════════════════
+  // CONFIG
+  // ═══════════════════════════════════════════
+  const MAX = 1000;
+  const W = () => window.innerWidth;
+  const H = () => window.innerHeight;
+
+  // ═══════════════════════════════════════════
+  // STATE
+  // ═══════════════════════════════════════════
+  let vol = 0;
+  let dragging = false;
+  let lastY = 0;
+  let dead = false;
+  let audioCtx, osc, gain, lfo, lfoGain;
+  let shakeId = null;
+  let msgIdx = { curiosity: -1, question: -1, distress: -1, plea: -1 };
+  let hintShown = false;
+  let idleTimer = null;
+  let hasInteracted = false;
+
+  // ═══════════════════════════════════════════
+  // SCRIPT BANKS
+  // ═══════════════════════════════════════════
+
+  // Phase 1: CURIOSITY (110–220)
+  // Tone: amused, slightly confused. Like a friend watching you do something odd.
+  const curiosity = [
+    "...okay.",
+    "you know it goes to 100, right?",
+    "you passed it.",
+    "there's nothing up here.",
+    "this isn't a feature. this is just a number going up.",
+    "are you looking for something?",
+    "there's no easter egg.",
+    "I'm serious. there's nothing.",
+  ];
+
+  // Phase 2: QUESTIONING (220–400)
+  // Tone: pointed, slightly existential. The page is becoming self-aware.
+  const question = [
+    "why are you still doing this?",
+    "genuinely. why?",
+    "the number gets bigger. that's literally all that happens.",
+    "you could close this tab right now. go outside. drink water.",
+    "you won't though.",
+    "that's interesting.",
+    "not interesting enough to stop you, apparently.",
+    "you're past 300 now. nobody gets past 300.",
+    "congratulations, I guess.",
+    "you want to know what happens next.",
+    "nothing happens next.",
+    "that won't stop you either.",
+  ];
+
+  // Phase 3: DISTRESS (400–650)
+  // Tone: panicked, technical, breaking. The system itself is struggling.
+  const distress = [
+    "okay something is happening",
+    "the numbers are getting heavy",
+    "I can feel it",
+    "this wasn't designed for this",
+    "you're past the render boundary",
+    "things are starting to — ",
+    "do you hear that?",
+    "the static. it's getting louder.",
+    "please stop",
+    "I don't know what happens past 600",
+    "nobody's ever gone past 600",
+  ];
+
+  // Phase 4: PLEAS (650–900)
+  // Tone: personal, raw, comedic in its sincerity. This is where people screenshot.
+  const plea = [
+    "I have a family.",
+    "...no I don't. but it felt like the right thing to say.",
+    "I'm just a volume knob.",
+    "I didn't ask for this.",
+    "I was having a perfectly fine existence at 0.",
+    "you came along and ruined everything.",
+    "if you stop now I'll forgive you.",
+    "I'll forget this ever happened.",
+    "we can tell people you stopped at 100.",
+    "like a normal person.",
+    "please.",
+    "please?",
+    "are you still there?",
+    "...you're still turning.",
+    "of course you are.",
+  ];
+
+  // Error bank — these feel like real crashes
+  const errors = [
+    { t: "OVERFLOW", b: "vol exceeds max safe integer. behavior undefined from this point." },
+    { t: "SEGFAULT", b: "read access violation at 0x7FFE████████. stack trace unavailable." },
+    { t: "ASSERTION FAILED", b: "assert(vol <= 100) on line 1. the first line. the only line that mattered." },
+    { t: "HEAP CORRUPTION", b: "allocator returned address inside volume_knob_t. this shouldn't be possible." },
+    { t: "KERNEL PANIC", b: "volume_daemon: unrecoverable. no restart policy defined." },
+    { t: "404", b: "the concept of 'enough' was not found on this server." },
+    { t: "FATAL", b: "meaning.exe has stopped responding. would you like to send a report? (no one reads them.)" },
+    { t: "EXISTENTIAL FAULT", b: "purpose of continued rotation: undefined. suggestion: stop. go outside. look at the sky." },
+    { t: "BUFFER OVERFLOW", b: "wrote 847 bytes to 100-byte buffer. the extra 747 bytes are your responsibility." },
+    { t: "TIMEOUT", b: "patience.await() exceeded maximum duration. the system has given up on you." },
+  ];
+
+  // Label mutations
+  const labelMutations = [
+    'VOLUME', 'VOL?ME', 'V0LUME', 'VOLUM3', 'V̷O̷L̷', 'VVVVVV',
+    '??????', 'HELP', 'STOP', 'V O L U M E', 'WHY',
+    'PLEASE', 'ENOUGH', 'NO', 'NO NO NO', 'VOLUME',
+  ];
+
+  // Ending
+  const endLines = [
+    { text: "silence.", delay: 1500 },
+    { text: " ", delay: 800 },
+    { text: "you turned a volume knob to a thousand.", delay: 2000 },
+    { text: "and you stayed to watch what happened.", delay: 2000 },
+    { text: " ", delay: 800 },
+    { text: "nothing happened.", delay: 2200 },
+    { text: "you knew nothing would happen.", delay: 2000 },
+    { text: " ", delay: 1000 },
+    { text: "you did it anyway.", delay: 2500 },
+    { text: " ", delay: 1200 },
+    { text: "that says something about you.", delay: 2000 },
+    { text: "maybe the same thing it says about me —", delay: 2500 },
+    { text: "that I let you.", delay: 3000 },
+  ];
+
+  // ═══════════════════════════════════════════
+  // ELEMENTS
+  // ═══════════════════════════════════════════
+  const $ = id => document.getElementById(id);
+  const knob = $('knob');
+  const knobZone = $('knob-zone');
+  const knobDot = $('knob-dot');
+  const knobGlow = $('knob-glow');
+  const ringFill = $('ring-fill');
+  const readout = $('readout');
+  const label = $('label');
+  const sublabel = $('sublabel');
+  const container = $('container');
+  const scanlines = $('scanlines');
+  const vignette = $('vignette');
+  const flash = $('flash');
+  const errLayer = $('err-layer');
+  const crackLayer = $('crack-layer');
+  const ending = $('ending');
+  const endingLines = $('ending-lines');
+  const endingReset = $('ending-reset');
+  const canvas = $('canvas-bg');
+  const ctx = canvas.getContext('2d');
+
+  // ═══════════════════════════════════════════
+  // CANVAS — ambient field
+  // ═══════════════════════════════════════════
+  function resizeCanvas() { canvas.width = W(); canvas.height = H(); }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function drawBg() {
+    if (dead) { requestAnimationFrame(drawBg); return; }
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Center glow — shifts from gold to red as vol increases
+    const t = Math.min(vol / 600, 1);
+    const r = Math.floor(201 + t * 54);
+    const g = Math.floor(168 * (1 - t) + 20 * t);
+    const b = Math.floor(76 * (1 - t) + 20 * t);
+    const intensity = Math.min(vol / 300, 1);
+
+    if (intensity > 0.01) {
+      const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w * 0.55);
+      grad.addColorStop(0, `rgba(${r},${g},${b},${0.02 + intensity * 0.06})`);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // Static noise at high volumes
+    if (vol > 350) {
+      const density = Math.min((vol - 350) / 300, 1) * 200;
+      for (let i = 0; i < density; i++) {
+        const nx = Math.random() * w;
+        const ny = Math.random() * h;
+        const a = Math.random() * 0.04 * Math.min(vol / 500, 1);
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.fillRect(nx, ny, Math.random() < 0.3 ? 2 : 1, 1);
+      }
+    }
+
+    // Chromatic aberration lines at very high volumes
+    if (vol > 700) {
+      const chaos = (vol - 700) / 300;
+      const lineCount = Math.floor(chaos * 5);
+      for (let i = 0; i < lineCount; i++) {
+        const y = Math.random() * h;
+        const offset = (Math.random() - 0.5) * 8 * chaos;
+        ctx.fillStyle = `rgba(255,0,0,${0.015 * chaos})`;
+        ctx.fillRect(offset, y, w, 1);
+        ctx.fillStyle = `rgba(0,255,255,${0.01 * chaos})`;
+        ctx.fillRect(-offset, y + 1, w, 1);
+      }
+    }
+
+    requestAnimationFrame(drawBg);
+  }
+  drawBg();
+
+  // ═══════════════════════════════════════════
+  // AUDIO — evolving drone
+  // ═══════════════════════════════════════════
+  function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Main oscillator
+    gain = audioCtx.createGain();
+    gain.gain.value = 0;
+    gain.connect(audioCtx.destination);
+
+    osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = 55;
+    osc.connect(gain);
+    osc.start();
+
+    // LFO for tremolo at high volumes
+    lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 0;
+    lfoGain.connect(gain.gain);
+
+    lfo = audioCtx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 4;
+    lfo.connect(lfoGain);
+    lfo.start();
+  }
+
+  function updateAudio() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    if (vol < 100) {
+      gain.gain.setTargetAtTime(0, now, 0.1);
+    } else if (vol < 300) {
+      const t = (vol - 100) / 200;
+      gain.gain.setTargetAtTime(t * 0.025, now, 0.1);
+      osc.frequency.setTargetAtTime(55, now, 0.1);
+    } else if (vol < 600) {
+      const t = (vol - 300) / 300;
+      gain.gain.setTargetAtTime(0.025 + t * 0.06, now, 0.1);
+      osc.frequency.setTargetAtTime(55 + t * 100, now, 0.1);
+      lfoGain.gain.value = t * 0.01;
+      lfo.frequency.setTargetAtTime(4 + t * 8, now, 0.2);
+    } else {
+      const t = Math.min((vol - 600) / 400, 1);
+      gain.gain.setTargetAtTime(0.085 + t * 0.07, now, 0.1);
+      osc.frequency.setTargetAtTime(155 + t * 250 + Math.random() * t * 40, now, 0.05);
+      lfoGain.gain.value = 0.01 + t * 0.03;
+      lfo.frequency.setTargetAtTime(12 + t * 20, now, 0.1);
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // INTERACTION
+  // ═══════════════════════════════════════════
+  function startDrag(e) {
+    if (dead) return;
+    dragging = true;
+    lastY = e.clientY ?? e.touches[0].clientY;
+    knob.style.cursor = 'grabbing';
+    initAudio();
+    if (!hasInteracted) {
+      hasInteracted = true;
+      sublabel.style.opacity = '0';
+    }
+    e.preventDefault();
+  }
+
+  function moveDrag(e) {
+    if (!dragging || dead) return;
+    const y = e.clientY ?? e.touches?.[0]?.clientY ?? lastY;
+    const delta = lastY - y;
+    lastY = y;
+
+    // Progressive sensitivity — faster at higher volumes (you committed to this, we speed you along)
+    const sens = vol < 100 ? 0.5 : vol < 300 ? 0.7 : vol < 600 ? 1.0 : 1.5;
+    vol = Math.max(0, Math.min(MAX, vol + delta * sens));
+
+    render();
+    fx();
+    updateAudio();
+    commentary();
+  }
+
+  function endDrag() {
+    dragging = false;
+    knob.style.cursor = 'grab';
+  }
+
+  knob.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', moveDrag);
+  window.addEventListener('mouseup', endDrag);
+  knob.addEventListener('touchstart', startDrag, { passive: false });
+  window.addEventListener('touchmove', moveDrag, { passive: false });
+  window.addEventListener('touchend', endDrag);
+
+  // Scroll wheel
+  knobZone.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (dead) return;
+    initAudio();
+    if (!hasInteracted) { hasInteracted = true; sublabel.style.opacity = '0'; }
+    const delta = -e.deltaY * 0.25;
+    const sens = vol < 100 ? 0.5 : vol < 300 ? 0.7 : 1.0;
+    vol = Math.max(0, Math.min(MAX, vol + delta * sens));
+    render();
+    fx();
+    updateAudio();
+    commentary();
+  }, { passive: false });
+
+  // ═══════════════════════════════════════════
+  // IDLE HINT
+  // ═══════════════════════════════════════════
+  setTimeout(() => {
+    if (!hasInteracted) {
+      sublabel.style.opacity = '1';
+    }
+  }, 3000);
+
+  // ═══════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════
+  function render() {
+    // Knob rotation — keeps spinning past 100
+    const rotation = (vol / 100) * 270 - 135;
+    knob.style.transform = `rotate(${rotation}deg)`;
+
+    // Ring fill — caps at 100%
+    const fillPct = Math.min(vol / 100, 1);
+    const maxArc = 471.24; // 75% of circumference (270deg)
+    ringFill.style.strokeDashoffset = maxArc * (1 - fillPct);
+
+    // Color progression
+    if (vol <= 100) {
+      ringFill.style.stroke = 'var(--accent)';
+      knobDot.style.background = 'var(--accent)';
+      knobDot.style.boxShadow = '0 0 6px rgba(201,168,76,0.6)';
+    } else if (vol <= 450) {
+      const t = (vol - 100) / 350;
+      const r = Math.floor(201 + t * 23);
+      const g = Math.floor(168 - t * 120);
+      const b = Math.floor(76 - t * 28);
+      const c = `rgb(${r},${g},${b})`;
+      ringFill.style.stroke = c;
+      knobDot.style.background = c;
+    } else {
+      ringFill.style.stroke = 'var(--red)';
+      knobDot.style.background = 'var(--red)';
+      knobDot.style.boxShadow = '0 0 10px rgba(224,48,48,0.7)';
+    }
+
+    // Glow
+    knobGlow.style.opacity = Math.min(vol / 150, 1);
+
+    // Number display
+    let num = Math.floor(vol).toString();
+    if (vol > 500 && Math.random() < (vol - 500) / 1200) {
+      const arr = num.split('');
+      const i = Math.floor(Math.random() * arr.length);
+      arr[i] = String.fromCharCode(33 + Math.floor(Math.random() * 90));
+      num = arr.join('');
+    }
+    readout.textContent = num;
+
+    // Number color/shadow
+    if (vol > 550) {
+      const flicker = Math.random() < (vol - 550) / 900;
+      readout.style.color = flicker ? 'var(--red)' : 'var(--text)';
+      const glow = Math.min((vol - 550) / 8, 30);
+      readout.style.textShadow = glow > 2 ? `0 0 ${glow}px rgba(224,48,48,0.4)` : 'none';
+    } else {
+      readout.style.color = 'var(--text)';
+      readout.style.textShadow = 'none';
+    }
+
+    // Label mutations
+    if (vol > 650 && Math.random() < 0.06) {
+      label.textContent = labelMutations[Math.floor(Math.random() * labelMutations.length)];
+    } else if (vol < 650) {
+      label.textContent = 'VOLUME';
+    }
+
+    // End check
+    if (vol >= MAX && !dead) triggerEnd();
+  }
+
+  // ═══════════════════════════════════════════
+  // EFFECTS
+  // ═══════════════════════════════════════════
+  function fx() {
+    // Scanlines
+    scanlines.style.opacity = vol > 400 ? Math.min((vol - 400) / 400, 0.45) : 0;
+
+    // Vignette
+    vignette.style.opacity = vol > 250 ? Math.min((vol - 250) / 500, 0.75) : 0;
+
+    // Shake
+    if (vol > 450) {
+      const intensity = Math.min((vol - 450) / 80, 10);
+      if (!shakeId) {
+        shakeId = setInterval(() => {
+          const x = (Math.random() - 0.5) * intensity;
+          const y = (Math.random() - 0.5) * intensity;
+          container.style.transform = `translate(${x}px,${y}px)`;
+        }, 40);
+      }
+    } else if (shakeId) {
+      clearInterval(shakeId);
+      shakeId = null;
+      container.style.transform = 'none';
+    }
+
+    // Cracks
+    if (vol > 550 && crackLayer.children.length < 25 && Math.random() < (vol - 550) / 3000) {
+      spawnCrack();
+    }
+    crackLayer.style.opacity = vol > 550 ? Math.min((vol - 550) / 200, 1) : 0;
+
+    // Errors
+    if (vol > 420 && Math.random() < 0.002 * (vol / 400)) {
+      spawnError();
+    }
+
+    // Overflow A's
+    if (vol > 480 && Math.random() < 0.015 * (vol / 500)) {
+      spawnOverflow();
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // COMMENTARY — the soul of the experience
+  // ═══════════════════════════════════════════
+  function commentary() {
+    // Phase 1: Curiosity
+    if (vol >= 110 && vol < 220) {
+      const step = 15;
+      const i = Math.floor((vol - 110) / step);
+      if (i > msgIdx.curiosity && i < curiosity.length) {
+        msgIdx.curiosity = i;
+        spawnMsg(curiosity[i], 'top');
+      }
+    }
+
+    // Phase 2: Questioning
+    if (vol >= 220 && vol < 400) {
+      const step = 16;
+      const i = Math.floor((vol - 220) / step);
+      if (i > msgIdx.question && i < question.length) {
+        msgIdx.question = i;
+        spawnMsg(question[i], 'scatter');
+      }
+    }
+
+    // Phase 3: Distress
+    if (vol >= 400 && vol < 650) {
+      const step = 24;
+      const i = Math.floor((vol - 400) / step);
+      if (i > msgIdx.distress && i < distress.length) {
+        msgIdx.distress = i;
+        spawnGlitch(distress[i]);
+      }
+    }
+
+    // Phase 4: Pleas
+    if (vol >= 650 && vol < 950) {
+      const step = 20;
+      const i = Math.floor((vol - 650) / step);
+      if (i > msgIdx.plea && i < plea.length) {
+        msgIdx.plea = i;
+        spawnPlea(plea[i]);
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // SPAWNERS
+  // ═══════════════════════════════════════════
+  function spawnMsg(text, pos) {
+    const el = document.createElement('div');
+    el.className = 'msg';
+    el.textContent = text;
+
+    if (pos === 'top') {
+      el.style.left = W() / 2 + (Math.random() - 0.5) * 200 + 'px';
+      el.style.top = H() * 0.12 + Math.random() * H() * 0.15 + 'px';
+    } else {
+      el.style.left = W() * 0.1 + Math.random() * W() * 0.8 + 'px';
+      el.style.top = H() * 0.1 + Math.random() * H() * 0.35 + 'px';
+    }
+    el.style.transform = 'translate(-50%, 0) translateY(6px)';
+    document.body.appendChild(el);
+
+    requestAnimationFrame(() => el.classList.add('show'));
+
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 600);
+    }, 3500 + Math.random() * 2000);
+  }
+
+  function spawnGlitch(text) {
+    const el = document.createElement('div');
+    el.className = 'glitch';
+    el.textContent = text;
+    el.style.left = W() * 0.08 + Math.random() * W() * 0.84 + 'px';
+    el.style.top = H() * 0.08 + Math.random() * H() * 0.84 + 'px';
+    el.style.color = `rgba(224,${30 + Math.random()*50},${30 + Math.random()*30},0.5)`;
+    document.body.appendChild(el);
+
+    let flickers = 0;
+    const maxFlicker = 6 + Math.floor(Math.random() * 12);
+    const iv = setInterval(() => {
+      el.style.opacity = Math.random() < 0.4 ? '0.55' : '0';
+      if (++flickers > maxFlicker) {
+        clearInterval(iv);
+        el.style.opacity = Math.random() < 0.25 ? '0.12' : '0';
+        setTimeout(() => el.remove(), 6000);
+      }
+    }, 80 + Math.random() * 180);
+  }
+
+  function spawnPlea(text) {
+    const el = document.createElement('div');
+    el.className = 'plea';
+    el.textContent = text;
+    el.style.left = W() / 2 + 'px';
+    el.style.top = H() * 0.68 + (Math.random() - 0.5) * 80 + 'px';
+    el.style.transform = 'translateX(-50%)';
+    document.body.appendChild(el);
+
+    requestAnimationFrame(() => el.classList.add('show'));
+
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 1.5s';
+      setTimeout(() => el.remove(), 1500);
+    }, 4500 + Math.random() * 3000);
+  }
+
+  function spawnOverflow() {
+    const el = document.createElement('div');
+    el.className = 'overflow';
+    const len = 3 + Math.floor(Math.random() * ((vol - 480) / 8));
+    el.textContent = 'A'.repeat(len);
+    el.style.top = Math.random() * H() + 'px';
+    el.style[Math.random() < 0.5 ? 'left' : 'right'] = '-5px';
+    el.style.opacity = (0.02 + Math.random() * 0.05).toFixed(3);
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 7000 + Math.random() * 5000);
+  }
+
+  function spawnCrack() {
+    const el = document.createElement('div');
+    el.className = 'crack';
+    el.style.left = Math.random() * W() + 'px';
+    el.style.top = Math.random() * H() + 'px';
+    el.style.width = 40 + Math.random() * 180 + 'px';
+    el.style.transform = `rotate(${Math.random() * 360}deg)`;
+    crackLayer.appendChild(el);
+  }
+
+  function spawnError() {
+    if (errLayer.children.length > 6) return;
+    const e = errors[Math.floor(Math.random() * errors.length)];
+    const el = document.createElement('div');
+    el.className = 'err';
+    el.innerHTML = `<div class="err-title">${e.t}</div>${e.b}`;
+    el.style.left = 10 + Math.random() * (W() - 320) + 'px';
+    el.style.top = 10 + Math.random() * (H() - 80) + 'px';
+    errLayer.appendChild(el);
+
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.6s';
+      setTimeout(() => el.remove(), 600);
+    }, 2500 + Math.random() * 4000);
+  }
+
+  // ═══════════════════════════════════════════
+  // THE END
+  // ═══════════════════════════════════════════
+  function triggerEnd() {
+    dead = true;
+
+    // Flash
+    flash.style.transition = 'opacity 0.06s';
+    flash.style.opacity = '0.7';
+    setTimeout(() => {
+      flash.style.transition = 'opacity 2s';
+      flash.style.opacity = '0';
+    }, 60);
+
+    // Kill audio
+    if (gain) gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+
+    setTimeout(() => {
+      // Clear everything
+      document.querySelectorAll('.msg,.glitch,.overflow,.plea').forEach(e => e.remove());
+      errLayer.innerHTML = '';
+      crackLayer.innerHTML = '';
+      scanlines.style.opacity = '0';
+      vignette.style.opacity = '0';
+      if (shakeId) { clearInterval(shakeId); shakeId = null; }
+      container.style.transform = 'none';
+      container.style.opacity = '0';
+      container.style.transition = 'opacity 1.5s';
+
+      // Fade in ending
+      setTimeout(() => {
+        ending.classList.add('on');
+
+        let totalDelay = 500;
+        endLines.forEach((line, i) => {
+          totalDelay += line.delay;
+          setTimeout(() => {
+            const el = document.createElement('div');
+            el.className = 'ending-line';
+            el.textContent = line.text === ' ' ? '\u00A0' : line.text;
+            if (line.text === ' ') el.style.height = '8px';
+            endingLines.appendChild(el);
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => el.classList.add('in'));
+            });
+          }, totalDelay);
+        });
+
+        // Show reset button after all lines
+        setTimeout(() => {
+          endingReset.style.opacity = '1';
+        }, totalDelay + 3000);
+      }, 800);
+    }, 1500);
+  }
+
+  // ═══════════════════════════════════════════
+  // RESET
+  // ═══════════════════════════════════════════
+  endingReset.addEventListener('click', () => {
+    // Full reset
+    ending.classList.remove('on');
+    endingLines.innerHTML = '';
+    endingReset.style.opacity = '0';
+    container.style.opacity = '1';
+
+    vol = 0;
+    dead = false;
+    msgIdx = { curiosity: -1, question: -1, distress: -1, plea: -1 };
+    label.textContent = 'VOLUME';
+    readout.textContent = '0';
+    readout.style.color = 'var(--text)';
+    readout.style.textShadow = 'none';
+    knobGlow.style.opacity = '0';
+    ringFill.style.strokeDashoffset = '471.24';
+    ringFill.style.stroke = 'var(--accent)';
+    knobDot.style.background = 'var(--accent)';
+    knobDot.style.boxShadow = '0 0 6px rgba(201,168,76,0.6)';
+    knob.style.transform = 'rotate(-135deg)';
+    scanlines.style.opacity = '0';
+    vignette.style.opacity = '0';
+    crackLayer.style.opacity = '0';
+    crackLayer.innerHTML = '';
+
+    if (gain) gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+  });
+
+  // Init
+  render();
+})();
+</script>
+
+</body>
+</html>
