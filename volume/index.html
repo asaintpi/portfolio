@@ -489,7 +489,7 @@ transition: color .3s;
   let dragging = false;
   let lastY = 0;
   let dead = false;
-  let audioCtx, osc, gain, lfo, lfoGain;
+  let audioCtx, osc, osc2, gain, osc2Gain, lfo, lfoGain;
   let shakeId = null;
   let msgIdx = { curiosity: -1, question: -1, distress: -1, plea: -1 };
   let hintShown = false;
@@ -691,17 +691,29 @@ transition: color .3s;
   function initAudio() {
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    // Main oscillator
+    // Main oscillator — start at a frequency phones can reproduce
     gain = audioCtx.createGain();
     gain.gain.value = 0;
     gain.connect(audioCtx.destination);
 
     osc = audioCtx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.value = 55;
+    osc.frequency.value = 150;
     osc.connect(gain);
     osc.start();
+
+    // Second oscillator for richness at higher volumes
+    osc2Gain = audioCtx.createGain();
+    osc2Gain.gain.value = 0;
+    osc2Gain.connect(audioCtx.destination);
+
+    osc2 = audioCtx.createOscillator();
+    osc2.type = 'triangle';
+    osc2.frequency.value = 300;
+    osc2.connect(osc2Gain);
+    osc2.start();
 
     // LFO for tremolo at high volumes
     lfoGain = audioCtx.createGain();
@@ -719,23 +731,36 @@ transition: color .3s;
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
 
+    // 0–100: quiet hum that grows — you're turning a volume knob, there should be sound
     if (vol < 100) {
-      gain.gain.setTargetAtTime(0, now, 0.1);
+      const t = vol / 100;
+      gain.gain.setTargetAtTime(t * 0.08, now, 0.1);
+      osc.frequency.setTargetAtTime(150 + t * 30, now, 0.1);
+      osc2Gain.gain.setTargetAtTime(0, now, 0.1);
+    // 100–300: it's past max, sound gets uneasy
     } else if (vol < 300) {
       const t = (vol - 100) / 200;
-      gain.gain.setTargetAtTime(t * 0.025, now, 0.1);
-      osc.frequency.setTargetAtTime(55, now, 0.1);
+      gain.gain.setTargetAtTime(0.08 + t * 0.07, now, 0.1);
+      osc.frequency.setTargetAtTime(180 + t * 60, now, 0.1);
+      osc2Gain.gain.setTargetAtTime(t * 0.03, now, 0.1);
+      osc2.frequency.setTargetAtTime(300 + t * 50, now, 0.1);
+    // 300–600: building dread, pitch climbing
     } else if (vol < 600) {
       const t = (vol - 300) / 300;
-      gain.gain.setTargetAtTime(0.025 + t * 0.06, now, 0.1);
-      osc.frequency.setTargetAtTime(55 + t * 100, now, 0.1);
-      lfoGain.gain.value = t * 0.01;
+      gain.gain.setTargetAtTime(0.15 + t * 0.1, now, 0.1);
+      osc.frequency.setTargetAtTime(240 + t * 160, now, 0.1);
+      osc2Gain.gain.setTargetAtTime(0.03 + t * 0.06, now, 0.1);
+      osc2.frequency.setTargetAtTime(350 + t * 150, now, 0.1);
+      lfoGain.gain.value = t * 0.02;
       lfo.frequency.setTargetAtTime(4 + t * 8, now, 0.2);
+    // 600+: full chaos, warbling, unstable
     } else {
       const t = Math.min((vol - 600) / 400, 1);
-      gain.gain.setTargetAtTime(0.085 + t * 0.07, now, 0.1);
-      osc.frequency.setTargetAtTime(155 + t * 250 + Math.random() * t * 40, now, 0.05);
-      lfoGain.gain.value = 0.01 + t * 0.03;
+      gain.gain.setTargetAtTime(0.25 + t * 0.15, now, 0.1);
+      osc.frequency.setTargetAtTime(400 + t * 300 + Math.random() * t * 60, now, 0.05);
+      osc2Gain.gain.setTargetAtTime(0.09 + t * 0.08, now, 0.1);
+      osc2.frequency.setTargetAtTime(500 + t * 400 + Math.random() * t * 80, now, 0.05);
+      lfoGain.gain.value = 0.02 + t * 0.05;
       lfo.frequency.setTargetAtTime(12 + t * 20, now, 0.1);
     }
   }
@@ -1083,6 +1108,7 @@ transition: color .3s;
 
     // Kill audio
     if (gain) gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+    if (osc2Gain) osc2Gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
 
     setTimeout(() => {
       // Clear everything
@@ -1152,6 +1178,7 @@ transition: color .3s;
     crackLayer.innerHTML = '';
 
     if (gain) gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+    if (osc2Gain) osc2Gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
   });
 
   // Init
